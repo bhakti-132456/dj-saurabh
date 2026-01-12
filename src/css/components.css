@@ -767,7 +767,8 @@ textarea:focus {
         align-items: center;
         max-width: var(--container-width);
         margin: 0 auto;
-        padding: 0 80px;
+        padding: 0 40px;
+        /* Matched to header padding */
         height: 100%;
         margin-top: 0;
     }
@@ -782,11 +783,12 @@ textarea:focus {
 
     .hero-right {
         width: 45%;
-        text-align: right;
+        text-align: center;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: flex-end;
+        align-items: center;
+        /* Center-align button with text */
     }
 
     .hero-logo {
@@ -796,12 +798,14 @@ textarea:focus {
     }
 
     .tagline {
-        font-size: 1.8rem;
-        margin-bottom: 2rem;
+        font-size: 1.6rem;
+        /* Slightly smaller for better proportions */
+        margin-bottom: 1.5rem;
     }
 
     .genres-ticker {
-        font-size: 1rem;
+        font-size: 0.9rem;
+        margin-bottom: 3rem;
     }
 
     .about-grid {

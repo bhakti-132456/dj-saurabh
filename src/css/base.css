@@ -81,6 +81,7 @@ img {
 .text-gradient {
     background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text-muted) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -100,6 +101,7 @@ img {
     color: white;
     padding: 1rem 2rem;
     border-radius: 50px;
+    font-family: var(--font-primary);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -117,6 +119,7 @@ img {
     background-color: var(--color-primary);
     padding: 0.5rem 1.2rem;
     border-radius: 4px;
+    font-family: var(--font-primary);
     font-size: 0.9rem;
     font-weight: 600;
 }
@@ -127,6 +130,7 @@ img {
     color: var(--color-text);
     padding: 1rem 2rem;
     border-radius: 50px;
+    font-family: var(--font-primary);
     font-weight: 600;
     border: 1px solid var(--color-text-muted);
     cursor: pointer;
