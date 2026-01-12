@@ -1,0 +1,41 @@
+:root {
+  /* Colors - Strict Theme */
+  --color-bg: #121212;
+  --color-bg-alt: #000000;
+  /* Pure black for contrast */
+  --color-text: #ffffff;
+  --color-text-muted: #e0e0e0;
+  /* Lighter than before for better readability on black */
+
+  /* Primary Red - High Saturation */
+  --color-primary: #D14836;
+  --color-primary-hover: #ff1f1f;
+  --color-accent: #ff0000;
+
+  /* Overlays */
+  --overlay-red: rgba(209, 72, 54, 0.4);
+  --overlay-dark: rgba(0, 0, 0, 0.85);
+
+  /* Glassmorphism - Darker & Glossier */
+  --glass-bg: rgba(20, 20, 20, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 20px;
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+  /* Typography */
+  --font-primary: 'Syne', sans-serif;
+  --font-secondary: 'Manrope', sans-serif;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 8rem;
+
+  /* Layout */
+  --container-width: 1400px;
+  /* Wider for premium feel */
+  --header-height: 90px;
+  --mobile-nav-height: 80px;
+}
