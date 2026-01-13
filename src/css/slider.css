@@ -1,0 +1,61 @@
+/* Clubs Slider */
+.clubs-slider-section {
+    margin-top: 4rem;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.section-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.clubs-ticker-wrapper {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.clubs-ticker {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    white-space: nowrap;
+    padding: 1rem 0;
+    will-change: transform;
+    animation: scrollTicker 40s linear infinite;
+    /* Adjusted for very slow animation */
+}
+
+/* Pause on hover for readability */
+.clubs-ticker-wrapper:hover .clubs-ticker {
+    animation-play-state: paused;
+}
+
+.clubs-ticker span {
+    font-family: var(--font-secondary);
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+@keyframes scrollTicker {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+        /* Moves entire width of one set */
+    }
+}

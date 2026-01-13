@@ -12,9 +12,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Music Player
     const player = new MusicPlayer();
 
-    // Mobile Navigation Active State
+    // Mobile Navigation Interaction
     const sections = document.querySelectorAll('section');
     const navItems = document.querySelectorAll('.mobile-nav .nav-item');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = item.getAttribute('href');
+            const targetSection = document.querySelector(sectionId);
+
+            if (targetSection) {
+                targetSection.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
 
     window.addEventListener('scroll', () => {
         let current = '';
@@ -22,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
             const sectionHeight = section.clientHeight;
-            if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+            if (window.pageYOffset >= (sectionTop - sectionHeight / 3)) {
                 current = section.getAttribute('id');
             }
         });

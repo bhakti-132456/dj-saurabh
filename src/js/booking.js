@@ -3,32 +3,17 @@ export function initBookingForm() {
     if (!form) return;
 
     const submitBtn = form.querySelector('button[type="submit"]');
+    const thankYouMsg = document.getElementById('thankYouMessage');
+    const formContent = form.querySelectorAll('.form-section, .form-actions'); // Select parts to hide
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Validation
-        const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
-        let valid = true;
-
-        inputs.forEach(input => {
-            if (!input.value) {
-                valid = false;
-                input.style.borderColor = 'var(--color-primary)';
-                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => input.style.borderColor = '', 2000);
-            }
-        });
-
-        if (!valid) return;
-
-        // Web3Forms Integration
         const formData = new FormData(form);
         formData.append("access_key", "22efb6c2-1884-4c68-b690-c1e24fca607a");
-        formData.append("subject", `New Booking Request from ${data.name || 'Website'}`);
-        formData.append("from_name", data.name || "DJ Saurabh Website");
 
         const originalText = submitBtn.textContent;
+
         submitBtn.textContent = "Sending...";
         submitBtn.disabled = true;
 
@@ -38,27 +23,29 @@ export function initBookingForm() {
                 body: formData
             });
 
-            const dataResponse = await response.json();
+            const data = await response.json();
 
             if (response.ok) {
-                // Success
-                form.style.opacity = '0';
-                setTimeout(() => {
-                    form.style.display = 'none';
-                    const successMsg = document.querySelector('.form-success');
-                    successMsg.style.display = 'block';
-                    successMsg.style.opacity = '0';
-                    setTimeout(() => {
-                        successMsg.style.opacity = '1';
-                        successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 50);
-                }, 300);
+                // Success - Hide form content and show thank you message
+                formContent.forEach(el => el.style.display = 'none'); // Hide input sections
+                submitBtn.style.display = 'none'; // Ensure button is hidden too if not covered
+
+                if (thankYouMsg) {
+                    thankYouMsg.style.display = 'block';
+                    thankYouMsg.classList.remove('hidden');
+                    // Scroll to message
+                    thankYouMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    alert("Success! Your message has been sent.");
+                    location.reload();
+                }
+
                 form.reset();
             } else {
-                alert("Error: " + dataResponse.message);
+                alert("Error: " + data.message);
             }
+
         } catch (error) {
-            console.error('Web3Forms Error:', error);
             alert("Something went wrong. Please try again.");
         } finally {
             submitBtn.textContent = originalText;
@@ -66,7 +53,7 @@ export function initBookingForm() {
         }
     });
 
-    // Radio card selection effect (handled by CSS, but keeping for any future enhancements)
+    // Keep radio card effect if it doesn't interfere
     const radioCards = form.querySelectorAll('.radio-card input');
     radioCards.forEach(radio => {
         radio.addEventListener('change', () => {

@@ -54,9 +54,11 @@ export function initGallery() {
         });
     });
 
-    // Keep horizontal scroll logic for desktop feel
+    // Keep horizontal scroll logic for desktop feel, disable on touch
     const scroller = document.querySelector('.gallery-scroller-wrapper');
-    if (scroller) {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    if (scroller && !isTouchDevice) {
         let isDown = false;
         let startX;
         let scrollLeft;
