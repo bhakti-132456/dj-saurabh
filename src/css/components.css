@@ -405,6 +405,21 @@
     margin-bottom: 0.2rem;
 }
 
+.opening-acts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.opening-acts-grid li {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
 /* Music Player */
 .music-player {
     position: fixed;
