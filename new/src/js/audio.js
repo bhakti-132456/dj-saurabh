@@ -3,15 +3,17 @@ import { decks as deckData } from './content.js';
 const BPM = 122; // the deep house mix sits around here; used for echo timing
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-// Tempo and beat grid from the audio itself: an onset envelope at 200 Hz, then the
-// tempo and offset whose beat grid lands on the most onsets.
+// Tempo and beat grid from the audio itself: a kick-weighted onset envelope at 200 Hz,
+// then the tempo and offset whose beat grid lands on the most onsets.
 function detectBeats(buf) {
     const data = buf.getChannelData(0), sr = buf.sampleRate, fps = 200, hop = Math.floor(sr / fps);
     const n = Math.floor(data.length / hop), env = new Float32Array(n), on = new Float32Array(n);
+    const k = 1 - Math.exp((-2 * Math.PI * 150) / sr); // one-pole low-pass at 150 Hz: the kick
+    let lp = 0;
     for (let i = 0; i < n; i++) {
         let s = 0;
-        for (let j = i * hop, e = j + hop; j < e; j += 4) s += Math.abs(data[j]);
-        env[i] = s;
+        for (let j = i * hop, e = j + hop; j < e; j++) { lp += k * (data[j] - lp); s += Math.abs(lp); }
+        env[i] = Math.log1p(s);
     }
     for (let i = 1; i < n; i++) on[i] = Math.max(0, env[i] - env[i - 1]);
     let best = { score: -1, bpm: 120, off: 0 };
@@ -36,7 +38,7 @@ function detectBeats(buf) {
 }
 
 class Deck {
-    constructor(engine, id, { src, title }) {
+    constructor(engine, id, { src, title, pitch = 0 }) {
         this.engine = engine;
         this.id = id;
         this.src = src;
@@ -46,7 +48,7 @@ class Deck {
         this.loading = null;
 
         this.playing = false;
-        this.rate = 1;
+        this.rate = 1 + pitch; // decks start at different tempos, so Sync has work to do
         this.pos = 0;
         this.anchorTime = 0;
         this.anchorPos = 0;
@@ -153,6 +155,7 @@ class Deck {
         if (this.playing) return;
         this.playing = true;
         this.startSource(this.pos);
+        if (this.synced) this.syncTo(this.other);
         this.engine.emit();
     }
 
@@ -175,12 +178,22 @@ class Deck {
         else await this.play();
     }
 
-    // Match tempo (and optionally beat phase) to another deck
+    get other() {
+        return this.engine.decks[this.id === 'A' ? 'B' : 'A'];
+    }
+
+    // Where the playhead sits in the beat grid: beat count and fraction through the beat
+    beatPhase() {
+        const b = (this.position() - this.beatOffset) / (60 / this.bpm);
+        return { beat: Math.floor(b), frac: b - Math.floor(b), bar: (((b / 4) % 1) + 1) % 1 };
+    }
+
+    // Match tempo (and optionally bar phase, so downbeats land together) to another deck
     syncTo(master, phase = true) {
         if (!this.bpm || !master.bpm) return;
         this.setPitch(clamp((master.bpm * master.rate) / this.bpm - 1, -0.16, 0.16));
         if (!phase) return;
-        const beatM = 60 / master.bpm, beatS = 60 / this.bpm;
+        const beatM = 240 / master.bpm, beatS = 240 / this.bpm; // one bar of four beats
         const ph = ((((master.position() - master.beatOffset) / beatM) % 1) + 1) % 1;
         const k = Math.floor((this.position() - this.beatOffset) / beatS);
         const pos = this.wrap(this.beatOffset + (k + ph) * beatS);

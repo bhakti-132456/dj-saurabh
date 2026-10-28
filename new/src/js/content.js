@@ -50,5 +50,5 @@ export const gallery = [
 
 export const decks = {
     A: { title: 'Deep House Mix, part I', src: '/audio/deck-a.mp3' },
-    B: { title: 'Deep House Mix, part II', src: '/audio/deck-b.mp3' },
+    B: { title: 'Deep House Mix, part II', src: '/audio/deck-b.mp3', pitch: -0.045 },
 };

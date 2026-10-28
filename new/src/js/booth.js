@@ -43,6 +43,7 @@ function buildDeck(el, deck) {
         <span class="deck-letter">${deck.id}</span>
         <span class="deck-title">${deck.title}</span>
         <span class="deck-bpm">-- BPM</span>
+        <span class="deck-beats" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
         <span class="deck-time">0:00</span>
       </div>
       <canvas class="deck-wave" aria-label="Deck ${deck.id} track overview. Click to jump."></canvas>
@@ -69,6 +70,7 @@ function buildDeck(el, deck) {
         play: el.querySelector('.play'),
         sync: el.querySelector('.sync'),
         bpm: el.querySelector('.deck-bpm'),
+        beats: [...el.querySelectorAll('.deck-beats i')],
         pitch: el.querySelector('.vrange'),
         pitchVal: el.querySelector('.pitch-val'),
         angle: 0,
@@ -100,6 +102,7 @@ function buildDeck(el, deck) {
         }
         engine.emit();
     });
+    ui.showPitch();
     ui.pitch.addEventListener('dblclick', () => { ui.pitch.value = 0; ui.pitch.dispatchEvent(new Event('input')); });
 
     ui.wave.addEventListener('click', async e => {
@@ -352,6 +355,19 @@ export function initBooth(avail) {
             ui.disc.style.transform = `rotate(${ui.angle}rad)`;
             ui.time.textContent = d.buffer ? `${fmt(d.position())} / ${fmt(d.duration)}` : '0:00';
             drawWave(ui, d);
+            // Beat lights: the bar position from the detected beat grid, lit on each beat
+            const ph = d.bpm ? d.beatPhase() : null;
+            ui.beats.forEach((b, j) => {
+                b.classList.toggle('is-on', !!ph && ((ph.beat % 4) + 4) % 4 === j);
+                b.classList.toggle('is-hit', !!ph && d.playing && ph.frac < 0.18);
+            });
+            // Sync holds the beats together: re-lock if loops or cue jumps pull them apart
+            const m = d.other;
+            if (d.synced && d.playing && m.playing && !d.scratching && !m.scratching && now - (ui.lockT || 0) > 250) {
+                ui.lockT = now;
+                const diff = ((d.beatPhase().bar - m.beatPhase().bar + 1.5) % 1) - 0.5;
+                if (Math.abs(diff * 240 / d.bpm) > 0.015) d.syncTo(m);
+            }
             const lvl = engine.ctx ? d.level() : 0;
             vuBars[i].style.height = `${Math.min(100, lvl * 140)}%`;
         });

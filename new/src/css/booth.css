@@ -71,6 +71,29 @@
   white-space: nowrap;
 }
 
+.deck-beats {
+  display: inline-flex;
+  gap: 3px;
+  align-self: center;
+}
+
+.deck-beats i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.08s, box-shadow 0.08s;
+}
+
+.deck-beats i.is-on {
+  background: rgba(227, 18, 11, 0.45);
+}
+
+.deck-beats i.is-on.is-hit {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+
 .transport .sync {
   border-color: rgba(227, 18, 11, 0.6);
 }
