@@ -302,7 +302,12 @@ function initLineup() {
             const unit = nat.reduce((sum, n, i) => sum + n * ws[i], 0) + gap * (spans.length - 1);
             const cap = (w * 0.3) / (100 * Math.max(...ws));
             let scale = Math.min((w - 2) / unit, cap);
-            const set = () => spans.forEach((sp, i) => { sp.style.fontSize = `${(100 * ws[i] * scale).toFixed(2)}px`; });
+            const set = () => spans.forEach((sp, i) => {
+                const size = 100 * ws[i] * scale;
+                sp.style.fontSize = `${size.toFixed(2)}px`;
+                // hover grows the name by 2px, done as a scale so the row doesn't reflow
+                sp.style.setProperty('--grow', ((size + 2) / size).toFixed(4));
+            });
             set();
             // type doesn't scale perfectly linearly: correct the last few pixels with a second pass
             const used = spans.reduce((sum, sp) => sum + sp.getBoundingClientRect().width, 0) + gap * scale * (spans.length - 1);
@@ -311,6 +316,12 @@ function initLineup() {
     };
     build();
     document.fonts?.ready.then(fit);
+    // Phones: a tap highlights a name the way hover does on desktop
+    ul.addEventListener('click', e => {
+        const name = e.target.closest('span');
+        ul.querySelectorAll('.is-hot').forEach(x => { if (x !== name) x.classList.remove('is-hot'); });
+        name?.classList.toggle('is-hot');
+    });
     let lastW = innerWidth;
     addEventListener('resize', () => {
         if (innerWidth === lastW) return;

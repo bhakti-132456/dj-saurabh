@@ -674,17 +674,33 @@
 .lineup-poster span {
   white-space: nowrap;
   text-wrap: nowrap; /* overrides the site-wide text-wrap: pretty, which would let names break */
-  transition: transform 0.35s var(--ease-out);
+  transform-origin: 50% 80%;
+  cursor: default;
+  transition: transform 0.3s var(--ease-out), color 0.3s;
 }
 
 .lineup-poster .is-red {
   color: var(--red);
 }
 
-/* hover: the name lifts a hair */
+/* hover (or a tap on phones): the name swaps colour and grows by 2px */
+.lineup-poster span.is-hot {
+  color: var(--red);
+  transform: scale(var(--grow, 1.02));
+}
+
+.lineup-poster span.is-red.is-hot {
+  color: var(--ink);
+}
+
 @media (hover: hover) {
   .lineup-poster span:hover {
-    transform: translateY(-0.04em);
+    color: var(--red);
+    transform: scale(var(--grow, 1.02));
+  }
+
+  .lineup-poster span.is-red:hover {
+    color: var(--ink);
   }
 }
 
