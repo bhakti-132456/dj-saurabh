@@ -275,12 +275,13 @@ function initGallery() {
         const distance = () => Math.max(0, strip.scrollWidth - window.innerWidth);
         const depth = () => {
             const cx = window.innerWidth / 2;
-            const k = window.innerWidth < 900 ? 0.35 : 1; // gentler on phones
+            const k = window.innerWidth < 900 ? 0 : 1; // flat on phones, where you swipe the strip
             items.forEach(el => {
                 const r = el.getBoundingClientRect();
-                const off = (r.left + r.width / 2 - cx) / cx; // -1..1 across the screen
-                const z = -Math.abs(off) * 220 * k;
-                el.style.transform = `translateZ(${z}px) rotateY(${off * -12 * k}deg)`;
+                const off = Math.max(-1, Math.min(1, (r.left + r.width / 2 - cx) / cx)); // -1..1 across the screen
+                // a gentle turn toward the centre: slightly smaller and dimmer toward the edges
+                el.style.transform = `perspective(1600px) rotateY(${off * -7 * k}deg) scale(${1 - Math.abs(off) * 0.1 * k})`;
+                el.style.opacity = 1 - Math.abs(off) * 0.35 * k;
             });
         };
         gsap.to(strip, {
@@ -297,7 +298,7 @@ function initGallery() {
                 onRefresh: depth,
             },
         });
-        return () => items.forEach(el => { el.style.transform = ''; });
+        return () => items.forEach(el => { el.style.transform = ''; el.style.opacity = ''; });
     });
 
     const box = document.getElementById('lightbox');

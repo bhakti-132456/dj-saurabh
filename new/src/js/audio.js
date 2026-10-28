@@ -122,7 +122,10 @@ class Deck {
     position() {
         if (this.playing && this.source && !this.scratching) {
             const t = this.engine.ctx.currentTime;
-            return this.wrap(this.anchorPos + (t - this.anchorTime) * this.rate);
+            let p = this.anchorPos + (t - this.anchorTime) * this.rate;
+            const L = this.loop;
+            if (L && p >= L.end) p = L.start + ((p - L.start) % (L.end - L.start));
+            return this.wrap(p);
         }
         return this.pos;
     }
@@ -139,6 +142,27 @@ class Deck {
         this.source = s;
         this.anchorTime = ctx.currentTime;
         this.anchorPos = this.wrap(at);
+        this.applyLoop();
+    }
+
+    // Loop: four beats from the last beat on the detected grid, so it stays in time
+    setLoop(on) {
+        const pos = this.position();
+        this.loop = null;
+        if (on && this.bpm) {
+            const beat = 60 / this.bpm;
+            const start = Math.max(0, this.beatOffset + Math.floor((pos - this.beatOffset) / beat) * beat);
+            this.loop = { start, end: Math.min(this.duration, start + 4 * beat) };
+        }
+        if (this.playing) { this.anchorPos = pos; this.anchorTime = this.engine.ctx.currentTime; } else this.pos = pos;
+        this.applyLoop();
+        this.engine.emit();
+    }
+
+    applyLoop() {
+        if (!this.source) return;
+        this.source.loopStart = this.loop ? this.loop.start : 0;
+        this.source.loopEnd = this.loop ? this.loop.end : 0;
     }
 
     stopSource() {
@@ -173,6 +197,7 @@ class Deck {
 
     async jump(seconds) {
         await this.load();
+        this.loop = null;
         this.pos = this.wrap(seconds);
         if (this.playing) this.startSource(this.pos);
         else await this.play();

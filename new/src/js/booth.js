@@ -37,7 +37,7 @@ function knob({ label, onChange, filter = false }) {
     return wrap;
 }
 
-function buildDeck(el, deck) {
+function buildDeck(el, deck, lite) {
     el.innerHTML = `
       <div class="deck-top">
         <span class="deck-letter">${deck.id}</span>
@@ -58,8 +58,9 @@ function buildDeck(el, deck) {
       </label>
       <div class="transport">
         <button class="pad-btn play" aria-pressed="false">Play</button>
-        <button class="pad-btn sync" aria-pressed="false" title="Match tempo and beats to the other deck">Sync</button>
-        ${deck.hotCues.map((c, i) => `<button class="pad-btn" data-cue="${c}" aria-label="Hot cue ${i + 1}, ${fmt(c)}">Cue ${i + 1}</button>`).join('')}
+        ${lite ? '' : '<button class="pad-btn sync" aria-pressed="false" title="Match tempo and beats to the other deck">Sync</button>'}
+        ${deck.hotCues.slice(0, lite ? 2 : 3).map((c, i) => `<button class="pad-btn" data-cue="${c}" aria-label="Hot cue ${i + 1}, ${fmt(c)}">Cue ${i + 1}</button>`).join('')}
+        ${lite ? '<button class="pad-btn loop" aria-pressed="false" title="Loop four beats">Loop</button>' : ''}
       </div>`;
 
     const ui = {
@@ -69,6 +70,7 @@ function buildDeck(el, deck) {
         disc: el.querySelector('.platter-disc'),
         play: el.querySelector('.play'),
         sync: el.querySelector('.sync'),
+        loop: el.querySelector('.loop'),
         bpm: el.querySelector('.deck-bpm'),
         beats: [...el.querySelectorAll('.deck-beats i')],
         pitch: el.querySelector('.vrange'),
@@ -90,7 +92,12 @@ function buildDeck(el, deck) {
         ui.showPitch();
         ui.onPitch?.();
     });
-    ui.sync.addEventListener('click', async () => {
+    ui.loop?.addEventListener('click', async () => {
+        haptic(12);
+        await deck.load();
+        deck.setLoop(!deck.loop);
+    });
+    ui.sync?.addEventListener('click', async () => {
         haptic(12);
         const other = engine.decks[deck.id === 'A' ? 'B' : 'A'];
         await Promise.all([deck.load(), other.load()]);
@@ -217,10 +224,12 @@ export function initBooth(avail) {
     if (!consoleEl) return;
     engine.ensure();
     const { A, B } = engine.decks;
+    // The homepage preview is a lite console: pitch, play, two cues, loop and the crossfader
+    const lite = 'lite' in document.getElementById('booth').dataset;
     let boothVisible = false;
     const deckUi = {
-        A: buildDeck(consoleEl.querySelector('[data-deck="A"]'), A),
-        B: buildDeck(consoleEl.querySelector('[data-deck="B"]'), B),
+        A: buildDeck(consoleEl.querySelector('[data-deck="A"]'), A, lite),
+        B: buildDeck(consoleEl.querySelector('[data-deck="B"]'), B, lite),
     };
 
     deckUi.A.onPitch = () => { if (B.synced) { B.syncTo(A, false); deckUi.B.showPitch(); } engine.emit(); };
@@ -256,11 +265,11 @@ export function initBooth(avail) {
     const xInput = xf.querySelector('input');
     xInput.addEventListener('input', () => engine.setCrossfader(Number(xInput.value)));
     xInput.addEventListener('dblclick', () => { xInput.value = 0; engine.setCrossfader(0); });
-    mixer.append(channel(A), vu, channel(B), xf);
+    mixer.append(...(lite ? [xf] : [channel(A), vu, channel(B), xf]));
     const vuBars = vu.querySelectorAll('i');
 
     let tiltXfade = false;
-    if (sensors.supported) {
+    if (sensors.supported && !lite) {
         const row = document.createElement('div');
         row.className = 'mixer-fx';
         row.innerHTML = `<button class="pad-btn" data-motion aria-pressed="false">Tilt crossfader</button>`;
@@ -279,8 +288,8 @@ export function initBooth(avail) {
     }
 
     // FX pads
-    const pads = document.getElementById('pads');
-    const padDefs = [
+    const pads = document.getElementById('pads') || document.createElement('div');
+    const padDefs = lite ? [] : [
         ['horn', 'Air horn', '1'],
         ['siren', 'Siren', '2'],
         ['riser', 'Riser', '3'],
@@ -332,8 +341,10 @@ export function initBooth(avail) {
             ui.play.textContent = d.playing ? 'Pause' : 'Play';
             ui.play.classList.toggle('is-on', d.playing);
             ui.play.setAttribute('aria-pressed', d.playing);
-            ui.sync.classList.toggle('is-on', !!d.synced);
-            ui.sync.setAttribute('aria-pressed', !!d.synced);
+            ui.sync?.classList.toggle('is-on', !!d.synced);
+            ui.sync?.setAttribute('aria-pressed', !!d.synced);
+            ui.loop?.classList.toggle('is-on', !!d.loop);
+            ui.loop?.setAttribute('aria-pressed', !!d.loop);
             if (d.bpm) ui.bpm.textContent = `${(d.bpm * d.rate).toFixed(1)} BPM`;
         }
     });
@@ -369,7 +380,7 @@ export function initBooth(avail) {
                 if (Math.abs(diff * 240 / d.bpm) > 0.015) d.syncTo(m);
             }
             const lvl = engine.ctx ? d.level() : 0;
-            vuBars[i].style.height = `${Math.min(100, lvl * 140)}%`;
+            if (vuBars[i]) vuBars[i].style.height = `${Math.min(100, lvl * 140)}%`;
         });
     };
     requestAnimationFrame(loop);

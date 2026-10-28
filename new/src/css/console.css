@@ -261,6 +261,37 @@
   display: none;
 }
 
+/* Lite console (homepage): pitch, Play, two cues, Loop and the crossfader */
+[data-lite] .fit[data-layout="land"] {
+  width: 1000px;
+}
+
+[data-lite] .fit[data-layout="land"] .console {
+  grid-template-columns: 420px 136px 420px;
+}
+
+[data-lite] .fit .mixer {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-content: center;
+}
+
+[data-lite] .fit .transport {
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+}
+
+[data-lite] .fit[data-layout="port"] .transport {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+[data-lite] .fit[data-layout="port"] .transport .play {
+  grid-column: 1 / -1;
+}
+
+[data-lite] .fit[data-layout="port"] .mixer {
+  padding: 10px 16px;
+}
+
 /* VJ panel (not scaled; it is small enough to fit as is) */
 .compact .vj-controls {
   display: grid;

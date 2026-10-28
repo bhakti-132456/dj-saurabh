@@ -204,7 +204,7 @@
     <section class="booth-preview" id="booth-preview">
       <div class="bp-copy">
         <h2>Step into the booth</h2>
-        <p>Try the decks right here: play, hit Sync, throw the crossfader. Then step into the full 3D booth, with
+        <p>Try the decks right here: play, drop a loop, throw the crossfader. Then step into the full 3D booth, with
           the visuals desk and the LED wall. Nothing to install.</p>
         <a href="./booth/" class="btn btn-red btn-large">Enter the booth<span class="btn-icon" aria-hidden="true"><svg
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
@@ -212,13 +212,22 @@
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg></span></a>
       </div>
-      <div class="mini-booth compact" id="booth" aria-label="Playable DJ console">
-        <div class="console" id="console">
-          <div class="deck" data-deck="A"></div>
-          <div class="mixer" id="mixer"></div>
-          <div class="deck" data-deck="B"></div>
+      <div class="bp-stage">
+        <div class="mini-booth compact" id="booth" data-lite aria-label="Playable DJ console">
+          <div class="console" id="console">
+            <div class="deck" data-deck="A"></div>
+            <div class="mixer" id="mixer"></div>
+            <div class="deck" data-deck="B"></div>
+          </div>
         </div>
-        <div class="pads" id="pads"></div>
+        <div class="led-wall">
+          <canvas id="ledWall" aria-hidden="true"></canvas>
+          <div class="led-cap">
+            <span class="led-tag">VJ</span>
+            <span>The LED wall moves with your mix</span>
+            <a href="./booth/#vj">Run the visuals →</a>
+          </div>
+        </div>
       </div>
     </section>
 

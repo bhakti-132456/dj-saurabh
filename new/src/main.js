@@ -9,6 +9,7 @@ import { initScroll, scrollToTarget } from './js/scroll.js';
 import { initHero } from './js/hero.js';
 import { initBookingForm } from './js/booking.js';
 import { initBooth } from './js/booth.js';
+import { initLedWall } from './js/ledwall.js';
 import { enableSensors, autoEnableSensors } from './js/sensors.js';
 import { lenis } from './js/scroll.js';
 
@@ -212,7 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
     autoEnableSensors();
     initHero();
     initBookingForm();
-    initBooth();
+    // Console takes the top of the stage, the LED wall the rest (half the screen on phones)
+    const mini = document.getElementById('booth');
+    initBooth(() => ({ w: mini.parentElement.clientWidth - 24, h: innerHeight * (innerWidth < 900 ? 0.46 : 0.5) }));
+    initLedWall(document.getElementById('ledWall'));
     initCopyBio();
     initMenu();
     initRotateBack();
