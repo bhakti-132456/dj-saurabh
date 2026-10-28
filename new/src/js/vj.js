@@ -4,7 +4,7 @@ import { sensors, tiltLive, haptic } from './sensors.js';
 
 // Generative scenes come first: they dance to the music with nothing loaded.
 // The photo scene is optional, for when you want his pictures on the wall.
-export const SCENES = ['Pulse', 'Tunnel', 'Spectrum', 'Warp', 'Strobe grid', 'Logo', 'Photo FX'];
+export const SCENES = ['Pulse', 'Tunnel', 'Spectrum', 'Warp', 'Strobe grid', 'Logo', 'Kaleido', 'Lasers', 'Photo FX'];
 const COLORS = ['Red', 'Mono', 'Invert'];
 const BANDS = 24;
 const IDLE_BPM = 122;
@@ -93,6 +93,29 @@ float scene(int m, vec2 uv) {
     float echo = texture2D(uLogo, (p - 0.5) * (1.0 + uBass * 0.3) + 0.5).a * inside * 0.4;
     return max(logo, echo) + (hash(uv + t) - 0.5) * 0.08;
   }
+  if (m == 6) { // Kaleido: a noise field folded into mirrored slices that turn with the music
+    float k = 6.0 + floor(uHigh * 4.0 * I) * 2.0;
+    float seg = PI / k;
+    float fa = mod(a + t * 0.25 + uBass * 0.4 * I, 2.0 * seg);
+    fa = abs(fa - seg);
+    vec2 q = vec2(cos(fa), sin(fa)) * r;
+    float n = noise(q * 7.0 - vec2(t * 0.8, 0.0)) * noise(q * 3.0 + t * 0.3);
+    float lines = smoothstep(0.42, 0.5, fract(n * 6.0 + r * 3.0 - t * 0.5));
+    return lines * (0.55 + uBass * I) * smoothstep(1.3, 0.2, r) + smoothstep(0.12 + uBass * 0.1, 0.0, r);
+  }
+  if (m == 7) { // Lasers: beams fanning up from the floor, sweeping on the beat
+    vec2 o = vec2(0.0, -0.55);
+    vec2 d = c - o;
+    float ang = atan(d.x, d.y);
+    float v = 0.0;
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i) - 3.0;
+      float target = fi * (0.16 + uMid * 0.12 * I) + sin(t * 1.3 + fi * 0.7) * 0.35 * (0.4 + uBass * I);
+      v += smoothstep(0.012 + uHigh * 0.01, 0.0, abs(ang - target)) * smoothstep(1.6, 0.0, length(d));
+    }
+    float haze = noise(c * 3.0 + vec2(0.0, t * 0.4)) * 0.12;
+    return v * (0.7 + uBass * 0.8 * I) + haze;
+  }
   // Photo FX (optional): his photo, sliced by the kick
   float slice = floor(uv.y * 24.0);
   float kick = (hash(vec2(slice, floor(t * 8.0))) - 0.5) * uBass * 0.18 * I;
@@ -179,7 +202,7 @@ export function createVJ() {
             beat = true;
             u.uBeat.value = 1;
             // cut to a new generative scene every 16 beats
-            if (auto && ++beatCount % 16 === 0) setScene((u.uScene.value + 1 + Math.floor(Math.random() * 4)) % 6);
+            if (auto && ++beatCount % 16 === 0) setScene((u.uScene.value + 1 + Math.floor(Math.random() * 4)) % (SCENES.length - 1)); // never Photo FX
         }
         u.uBeat.value *= 0.9;
         lastBass = bass;

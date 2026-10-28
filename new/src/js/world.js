@@ -184,25 +184,42 @@ export function createWorld(canvas, vj) {
     const views = {
         far: { pos: new THREE.Vector3(0, 3.4, 9), look: new THREE.Vector3(0, 2, -2) },
         overview: { pos: new THREE.Vector3(0, 1.95, 3.2), look: new THREE.Vector3(0, 1.25, -1.3) },
-        dj: view(dj, arms[-1].n),
-        vj: view(vjg, arms[1].n),
+        dj: view(dj, arms[-1].n, 0.18),
+        vj: view(vjg, arms[1].n, 0.45, 2.0, 1.5), // further back and up: over the laptop to the wall it drives
     };
-    function view(obj, n) {
+    function view(obj, n, toWall, dist = 1.15, up = 1.05) {
         const look = obj.position.clone().add(new THREE.Vector3(0, 0.05, 0));
-        const pos = look.clone().addScaledVector(n, 1.15).add(new THREE.Vector3(0, 1.05, 0));
+        const pos = look.clone().addScaledVector(n, dist).add(new THREE.Vector3(0, up, 0));
         // keep the LED wall in the back of the shot
-        look.lerp(new THREE.Vector3(0, 2.4, -3.8), 0.18);
+        look.lerp(new THREE.Vector3(0, 2.4, -3.8), toWall);
         return { pos, look };
     }
     const look = views.far.look.clone();
     camera.position.copy(views.far.pos);
     let current = 'far';
-    const fly = (name, duration = 1.6) => {
+    // The band of screen left between the top bar and an open panel. Console shots are
+    // centred in it, and pulled back when it is short or narrow, so the console and the
+    // LED wall behind it both stay in view.
+    let shot = null;
+    const applyFrame = () => {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        if (!shot) camera.clearViewOffset();
+        else camera.setViewOffset(w, h, 0, h / 2 - (shot.top + shot.bottom) / 2, w, h);
+    };
+    const pullBack = () => {
+        if (!shot) return 1;
+        const w = canvas.clientWidth, h = canvas.clientHeight, band = Math.max(1, shot.bottom - shot.top);
+        return Math.min(2.6, Math.max(1, h / band, (h / w) * 1.5));
+    };
+    const fly = (name, duration = 1.6, band = null) => {
         current = name;
+        shot = name === 'dj' || name === 'vj' ? band : null;
+        applyFrame();
         const v = views[name];
+        const pos = v.look.clone().addScaledVector(v.pos.clone().sub(v.look), pullBack());
         const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
         const d = reduced ? 0 : duration;
-        gsap.to(camera.position, { x: v.pos.x, y: v.pos.y, z: v.pos.z, duration: d, ease: 'power3.inOut' });
+        gsap.to(camera.position, { x: pos.x, y: pos.y, z: pos.z, duration: d, ease: 'power3.inOut' });
         gsap.to(look, { x: v.look.x, y: v.look.y, z: v.look.z, duration: d, ease: 'power3.inOut' });
     };
 
@@ -234,6 +251,7 @@ export function createWorld(canvas, vj) {
         // narrow screens: widen the lens so both arms stay in frame
         camera.fov = w / h < 1 ? 68 : 50;
         camera.updateProjectionMatrix();
+        applyFrame();
     };
     new ResizeObserver(resize).observe(canvas);
     resize();

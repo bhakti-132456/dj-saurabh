@@ -29,12 +29,27 @@ vj.mountControls($('#vjControls'));
 autoEnableSensors();
 
 // ---- Views ----
+// The screen band above the open panel, where the camera frames the console
+const band = () => {
+    const p = document.querySelector('.panel:not([hidden])');
+    return { top: bar.getBoundingClientRect().bottom, bottom: p ? p.getBoundingClientRect().top - 8 : innerHeight };
+};
+let reframe = 0;
+addEventListener('resize', () => {
+    clearTimeout(reframe);
+    reframe = setTimeout(() => {
+        const mode = document.body.dataset.mode;
+        if (world && (mode === 'dj' || mode === 'vj')) world.fly(mode, 0.4, band());
+    }, 150);
+});
 const go = name => {
     document.body.dataset.mode = name;
     document.querySelectorAll('.panel').forEach(p => { p.hidden = p.dataset.panel !== name; });
     document.querySelectorAll('.bt-tabs [data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === name));
-    world?.fly(name);
-    if (name === 'dj') requestAnimationFrame(fitDJ);
+    requestAnimationFrame(() => {
+        if (name === 'dj') fitDJ();
+        world?.fly(name, 1.6, band());
+    });
     history.replaceState(null, '', name === 'overview' ? location.pathname : `#${name}`);
     haptic(8);
 };

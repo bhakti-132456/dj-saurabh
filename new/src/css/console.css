@@ -292,36 +292,75 @@
   padding: 10px 16px;
 }
 
-/* VJ panel (not scaled; it is small enough to fit as is) */
+/* VJ panel: a slim strip, so the LED wall and the laptop stay in view above it.
+   Scenes scroll sideways in one row; intensity, colour and the cut buttons sit in a row below. */
 .compact .vj-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   width: min(900px, 100%);
 }
 
 .compact .vj-scenes {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  mask-image: linear-gradient(to right, #000 92%, transparent);
+}
+
+.compact .vj-scenes::-webkit-scrollbar {
+  display: none;
+}
+
+.compact .vj-scenes .pad-btn {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  scroll-snap-align: start;
 }
 
 .compact .vj-side {
-  display: grid;
-  gap: 10px;
-  align-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
 }
 
-@media (max-width: 700px) {
-  .compact .vj-controls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .compact .vj-scenes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.compact .vj-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 140px;
+  font-size: 0.75rem;
 }
 
-@media (max-height: 520px) {
-  .compact .vj-scenes .pad-btn {
-    padding: 9px 8px;
+.compact .vj-row input {
+  flex: 1;
+  min-width: 70px;
+}
+
+.compact .vj-actions {
+  gap: 6px;
+}
+
+.compact .vj-actions .pad-btn {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+}
+
+.panel[data-panel="vj"] {
+  width: min(900px, calc(100% - 24px));
+  padding: 10px;
+  gap: 6px;
+  overflow: hidden;
+}
+
+@media (max-width: 700px), (max-height: 520px) {
+  .panel[data-panel="vj"] .panel-hint {
+    display: none;
   }
 }
