@@ -3,6 +3,38 @@ import { decks as deckData } from './content.js';
 const BPM = 122; // the deep house mix sits around here; used for echo timing
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
+// Tempo and beat grid from the audio itself: an onset envelope at 200 Hz, then the
+// tempo and offset whose beat grid lands on the most onsets.
+function detectBeats(buf) {
+    const data = buf.getChannelData(0), sr = buf.sampleRate, fps = 200, hop = Math.floor(sr / fps);
+    const n = Math.floor(data.length / hop), env = new Float32Array(n), on = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+        let s = 0;
+        for (let j = i * hop, e = j + hop; j < e; j += 4) s += Math.abs(data[j]);
+        env[i] = s;
+    }
+    for (let i = 1; i < n; i++) on[i] = Math.max(0, env[i] - env[i - 1]);
+    let best = { score: -1, bpm: 120, off: 0 };
+    const score = (bpm, o) => {
+        const P = (60 / bpm) * fps;
+        let s = 0;
+        for (let t = o; t < n; t += P) s += on[Math.round(t)] || 0;
+        return s / Math.floor((n - o) / P);
+    };
+    const search = (lo, hi, step, offStep) => {
+        for (let bpm = lo; bpm <= hi; bpm += step) {
+            const P = (60 / bpm) * fps;
+            for (let o = 0; o < P; o += offStep) {
+                const sc = score(bpm, o);
+                if (sc > best.score) best = { score: sc, bpm, off: o };
+            }
+        }
+    };
+    search(100, 150, 0.5, 2);
+    search(best.bpm - 0.6, best.bpm + 0.6, 0.02, 1);
+    return { bpm: Math.round(best.bpm * 10) / 10, beatOffset: best.off / fps };
+}
+
 class Deck {
     constructor(engine, id, { src, title }) {
         this.engine = engine;
@@ -62,7 +94,7 @@ class Deck {
             this.loading = fetch(this.src)
                 .then(r => r.arrayBuffer())
                 .then(ab => this.engine.ctx.decodeAudioData(ab))
-                .then(buf => { this.buffer = buf; this.engine.emit(); return buf; });
+                .then(buf => { this.buffer = buf; Object.assign(this, detectBeats(buf)); this.engine.emit(); return buf; });
         }
         return this.loading;
     }
@@ -141,6 +173,18 @@ class Deck {
         this.pos = this.wrap(seconds);
         if (this.playing) this.startSource(this.pos);
         else await this.play();
+    }
+
+    // Match tempo (and optionally beat phase) to another deck
+    syncTo(master, phase = true) {
+        if (!this.bpm || !master.bpm) return;
+        this.setPitch(clamp((master.bpm * master.rate) / this.bpm - 1, -0.16, 0.16));
+        if (!phase) return;
+        const beatM = 60 / master.bpm, beatS = 60 / this.bpm;
+        const ph = ((((master.position() - master.beatOffset) / beatM) % 1) + 1) % 1;
+        const k = Math.floor((this.position() - this.beatOffset) / beatS);
+        const pos = this.wrap(this.beatOffset + (k + ph) * beatS);
+        if (this.playing) this.startSource(pos); else this.pos = pos;
     }
 
     setPitch(p) {

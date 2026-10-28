@@ -1,0 +1,193 @@
+/* Compact console layout, shared by the booth panels and the homepage preview */
+.compact .console {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.compact .mixer,
+.compact .deck[data-deck] {
+  grid-column: auto;
+  grid-row: auto;
+  order: 0;
+}
+
+.compact .deck-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.compact .deck-top {
+  flex-wrap: nowrap;
+}
+
+.compact .deck,
+.compact .mixer {
+  padding: 10px;
+  gap: 8px 10px;
+}
+
+.compact .deck-wave {
+  height: 34px;
+}
+
+.compact .platter {
+  width: min(100%, 22vh, 210px);
+}
+
+.compact .channel {
+  /* one strip per deck, like a hardware mixer: Hi, Mid, Low, Filter, then the fader */
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.compact .knob {
+  gap: 1px;
+  font-size: 0.62rem;
+}
+
+.compact .channel .vrange {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-height: 70px;
+  height: 14vh;
+}
+
+.compact .vu {
+  min-height: 0;
+}
+
+.compact .knob-dial {
+  width: 32px;
+  height: 32px;
+}
+
+.compact .vrange {
+  min-height: 80px;
+}
+
+.compact .pitch .vrange {
+  height: 16vh;
+}
+
+.compact .pads {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.compact .fx-pad {
+  aspect-ratio: auto;
+  height: 52px;
+}
+
+.compact .transport .pad-btn {
+  padding: 9px 4px;
+  font-size: 0.82rem;
+}
+
+.compact .mixer-title {
+  display: none;
+}
+
+.compact .vj-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.compact .vj-scenes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.compact .vj-side {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+@media (max-height: 520px) {
+  .compact .console {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px) minmax(0, 1fr);
+  }
+
+  .compact .deck-wave {
+    height: 26px;
+  }
+
+  .compact .deck-top {
+    font-size: 0.8rem;
+  }
+
+  .compact .platter {
+    width: min(100%, 30vh);
+  }
+
+  .compact .fx-pad {
+    height: 40px;
+    font-size: 0.75rem;
+  }
+
+  .compact .fx-pad small {
+    display: none;
+  }
+
+  .compact .knob-dial {
+    width: 24px;
+    height: 24px;
+  }
+
+  .compact .knob-dial::after {
+    top: 2px;
+    height: 8px;
+  }
+
+  .compact .knob span {
+    font-size: 0.55rem;
+    line-height: 1;
+  }
+
+  .compact .channel {
+    gap: 2px;
+  }
+
+}
+
+@media (max-width: 700px) {
+  .compact .console,
+  .compact .vj-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compact .vj-scenes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .compact .pads {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+.compact .vu {
+  min-height: 90px;
+  align-self: stretch;
+}
+
+.compact .deck-time {
+  white-space: nowrap;
+}
+
+@media (max-height: 520px) {
+  .compact .deck-title {
+    display: none;
+  }
+
+  .compact .platter {
+    width: min(100%, 24vh);
+  }
+
+  .compact .vu {
+    min-height: 60px;
+  }
+}

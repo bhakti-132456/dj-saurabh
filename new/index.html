@@ -41,6 +41,8 @@
 
   <link rel="stylesheet" href="./src/css/base.css" />
   <link rel="stylesheet" href="./src/css/sections.css" />
+  <link rel="stylesheet" href="./src/css/booth.css" />
+  <link rel="stylesheet" href="./src/css/console.css" />
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="preload" as="image" href="/media/cutout-wide.webp" media="(orientation: landscape)">
   <link rel="preload" as="image" href="/media/cutout-tall.webp" media="(orientation: portrait)">
@@ -200,20 +202,23 @@
 
     <!-- THE BOOTH: preview; the full 3D booth lives on its own page -->
     <section class="booth-preview" id="booth-preview">
-      <div class="bp-stage" aria-hidden="true">
-        <div class="bp-wall"></div>
-        <div class="bp-table"><span class="bp-arm bp-left"></span><span class="bp-arm bp-right"></span></div>
-        <div class="bp-disc"><span></span></div>
-      </div>
       <div class="bp-copy">
         <h2>Step into the booth</h2>
-        <p>A virtual DJ booth you can play in your browser. Mix Saurabh's decks on one side, run the visuals on the
-          LED wall on the other. Nothing to install.</p>
+        <p>Try the decks right here: play, hit Sync, throw the crossfader. Then step into the full 3D booth, with
+          the visuals desk and the LED wall. Nothing to install.</p>
         <a href="./booth/" class="btn btn-red btn-large">Enter the booth<span class="btn-icon" aria-hidden="true"><svg
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
               stroke-linejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg></span></a>
+      </div>
+      <div class="mini-booth compact" id="booth" aria-label="Playable DJ console">
+        <div class="console" id="console">
+          <div class="deck" data-deck="A"></div>
+          <div class="mixer" id="mixer"></div>
+          <div class="deck" data-deck="B"></div>
+        </div>
+        <div class="pads" id="pads"></div>
       </div>
     </section>
 

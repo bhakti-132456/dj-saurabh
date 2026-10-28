@@ -193,108 +193,7 @@
   }
 }
 
-.panel .console {
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
-  gap: 10px;
-}
-
-.panel .mixer,
-.panel .deck[data-deck] {
-  grid-column: auto;
-  grid-row: auto;
-  order: 0;
-}
-
-.panel .deck-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.panel .deck-top {
-  flex-wrap: nowrap;
-}
-
-.panel .deck,
-.panel .mixer {
-  padding: 10px;
-  gap: 8px 10px;
-}
-
-.panel .deck-wave {
-  height: 34px;
-}
-
-.panel .platter {
-  width: min(100%, 22vh, 210px);
-}
-
-.panel .channel {
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-
-.panel .channel .vrange {
-  grid-column: 1 / -1;
-  justify-self: center;
-  min-height: 70px;
-  height: 14vh;
-}
-
-.panel .vu {
-  min-height: 0;
-}
-
-.panel .knob-dial {
-  width: 32px;
-  height: 32px;
-}
-
-.panel .vrange {
-  min-height: 80px;
-}
-
-.panel .pitch .vrange {
-  height: 16vh;
-}
-
-.panel .pads {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.panel .fx-pad {
-  aspect-ratio: auto;
-  height: 52px;
-}
-
-.panel .transport .pad-btn {
-  padding: 9px 4px;
-  font-size: 0.82rem;
-}
-
-.panel .mixer-title {
-  display: none;
-}
-
 /* VJ panel */
-.panel .vj-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 12px;
-}
-
-.panel .vj-scenes {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.panel .vj-side {
-  display: grid;
-  gap: 10px;
-  align-content: start;
-}
-
 .panel-hint {
   font-size: 0.85rem;
   color: var(--muted);
@@ -364,58 +263,12 @@
     bottom: max(6px, env(safe-area-inset-bottom));
   }
 
-  .panel .console {
-    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px) minmax(0, 1fr);
-  }
-
-  .panel .deck-wave {
-    height: 26px;
-  }
-
-  .panel .deck-top {
-    font-size: 0.8rem;
-  }
-
-  .panel .platter {
-    width: min(100%, 30vh);
-  }
-
-  .panel .fx-pad {
-    height: 40px;
-    font-size: 0.75rem;
-  }
-
-  .panel .fx-pad small {
-    display: none;
-  }
-
-  .panel .knob-dial {
-    width: 28px;
-    height: 28px;
-  }
-
-  .panel .knob span {
-    display: none;
-  }
 }
 
 /* Upright phones (if they stay in portrait): stack the console and scroll the sheet */
 @media (max-width: 700px) {
   .panel {
     max-height: 66vh;
-  }
-
-  .panel .console,
-  .panel .vj-controls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .panel .vj-scenes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .panel .pads {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .bt-back {

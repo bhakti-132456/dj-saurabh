@@ -8,6 +8,7 @@ import { engine } from './js/audio.js';
 import { initScroll, scrollToTarget } from './js/scroll.js';
 import { initHero } from './js/hero.js';
 import { initBookingForm } from './js/booking.js';
+import { initBooth } from './js/booth.js';
 import { enableSensors, autoEnableSensors } from './js/sensors.js';
 import { lenis } from './js/scroll.js';
 
@@ -211,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     autoEnableSensors();
     initHero();
     initBookingForm();
+    initBooth();
     initCopyBio();
     initMenu();
     initRotateBack();

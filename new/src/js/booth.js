@@ -42,6 +42,7 @@ function buildDeck(el, deck) {
       <div class="deck-top">
         <span class="deck-letter">${deck.id}</span>
         <span class="deck-title">${deck.title}</span>
+        <span class="deck-bpm">-- BPM</span>
         <span class="deck-time">0:00</span>
       </div>
       <canvas class="deck-wave" aria-label="Deck ${deck.id} track overview. Click to jump."></canvas>
@@ -51,11 +52,12 @@ function buildDeck(el, deck) {
         </div>
       </div>
       <label class="pitch"><span>Pitch</span>
-        <input type="range" class="vrange" min="-8" max="8" step="0.1" value="0" aria-label="Deck ${deck.id} pitch">
+        <input type="range" class="vrange" min="-16" max="16" step="0.1" value="0" aria-label="Deck ${deck.id} pitch">
         <span class="pitch-val">0.0%</span>
       </label>
       <div class="transport">
         <button class="pad-btn play" aria-pressed="false">Play</button>
+        <button class="pad-btn sync" aria-pressed="false" title="Match tempo and beats to the other deck">Sync</button>
         ${deck.hotCues.map((c, i) => `<button class="pad-btn" data-cue="${c}" aria-label="Hot cue ${i + 1}, ${fmt(c)}">Cue ${i + 1}</button>`).join('')}
       </div>`;
 
@@ -65,6 +67,8 @@ function buildDeck(el, deck) {
         platter: el.querySelector('.platter'),
         disc: el.querySelector('.platter-disc'),
         play: el.querySelector('.play'),
+        sync: el.querySelector('.sync'),
+        bpm: el.querySelector('.deck-bpm'),
         pitch: el.querySelector('.vrange'),
         pitchVal: el.querySelector('.pitch-val'),
         angle: 0,
@@ -73,10 +77,28 @@ function buildDeck(el, deck) {
 
     ui.play.addEventListener('click', () => { haptic(10); deck.toggle(); });
     el.querySelectorAll('[data-cue]').forEach(b => b.addEventListener('click', () => { haptic(10); deck.jump(Number(b.dataset.cue)); }));
-    ui.pitch.addEventListener('input', () => {
-        const p = Number(ui.pitch.value);
-        deck.setPitch(p / 100);
+    ui.showPitch = () => {
+        const p = (deck.rate - 1) * 100;
+        ui.pitch.value = p;
         ui.pitchVal.textContent = `${p > 0 ? '+' : ''}${p.toFixed(1)}%`;
+    };
+    ui.pitch.addEventListener('input', () => {
+        deck.synced = false; // moving your own pitch releases sync
+        deck.setPitch(Number(ui.pitch.value) / 100);
+        ui.showPitch();
+        ui.onPitch?.();
+    });
+    ui.sync.addEventListener('click', async () => {
+        haptic(12);
+        const other = engine.decks[deck.id === 'A' ? 'B' : 'A'];
+        await Promise.all([deck.load(), other.load()]);
+        deck.synced = !deck.synced;
+        if (deck.synced) {
+            other.synced = false;
+            deck.syncTo(other);
+            ui.showPitch();
+        }
+        engine.emit();
     });
     ui.pitch.addEventListener('dblclick', () => { ui.pitch.value = 0; ui.pitch.dispatchEvent(new Event('input')); });
 
@@ -172,6 +194,9 @@ export function initBooth() {
         A: buildDeck(consoleEl.querySelector('[data-deck="A"]'), A),
         B: buildDeck(consoleEl.querySelector('[data-deck="B"]'), B),
     };
+
+    deckUi.A.onPitch = () => { if (B.synced) { B.syncTo(A, false); deckUi.B.showPitch(); } engine.emit(); };
+    deckUi.B.onPitch = () => { if (A.synced) { A.syncTo(B, false); deckUi.A.showPitch(); } engine.emit(); };
 
     // Mixer
     const mixer = document.getElementById('mixer');
@@ -279,6 +304,9 @@ export function initBooth() {
             ui.play.textContent = d.playing ? 'Pause' : 'Play';
             ui.play.classList.toggle('is-on', d.playing);
             ui.play.setAttribute('aria-pressed', d.playing);
+            ui.sync.classList.toggle('is-on', !!d.synced);
+            ui.sync.setAttribute('aria-pressed', !!d.synced);
+            if (d.bpm) ui.bpm.textContent = `${(d.bpm * d.rate).toFixed(1)} BPM`;
         }
     });
 

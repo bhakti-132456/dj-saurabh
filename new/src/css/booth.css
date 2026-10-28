@@ -63,6 +63,18 @@
   font-size: 0.92rem;
 }
 
+.deck-bpm {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+.transport .sync {
+  border-color: rgba(227, 18, 11, 0.6);
+}
+
 .deck-time {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
@@ -152,7 +164,7 @@
 .transport {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1.4fr repeat(3, 1fr);
+  grid-template-columns: 1.3fr 1fr repeat(3, 1fr);
   gap: 8px;
 }
 
