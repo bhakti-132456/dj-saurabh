@@ -328,31 +328,65 @@ kbd {
 .sound-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: none;
-  border: 0;
+  gap: 8px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 10px;
+  justify-content: center;
+  background: rgba(243, 237, 228, 0.06);
+  border: 1px solid rgba(243, 237, 228, 0.22);
+  border-radius: 999px;
   color: var(--paper);
-  font: 600 0.85rem var(--font-body);
   cursor: pointer;
-  padding: 8px 4px;
+  transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+}
+
+.sound-toggle:hover {
+  border-color: var(--paper);
+}
+
+.sound-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.sound-waves,
+.sound-bars {
+  display: none;
 }
 
 .sound-bars {
-  display: inline-flex;
   align-items: flex-end;
   gap: 2px;
-  height: 16px;
+  height: 14px;
 }
 
 .sound-bars i {
   width: 3px;
   height: 3px;
+  border-radius: 1px;
   background: currentColor;
   transition: height 0.08s linear;
 }
 
+/* Playing: speaker with waves, live level bars beside it */
 .sound-toggle[aria-pressed="true"] {
   color: var(--red);
+  background: rgba(227, 18, 11, 0.12);
+  border-color: var(--red);
+}
+
+.sound-toggle[aria-pressed="true"] .sound-waves {
+  display: inline;
+}
+
+.sound-toggle[aria-pressed="true"] .sound-mute {
+  display: none;
+}
+
+.sound-toggle[aria-pressed="true"] .sound-bars {
+  display: inline-flex;
 }
 
 /* Footer */
@@ -631,9 +665,6 @@ kbd {
 }
 
 @media (max-width: 420px) {
-  .sound-label {
-    display: none;
-  }
 
   .topbar .btn-small {
     padding: 0.55em 0.9em;

@@ -86,7 +86,6 @@ function toast(msg) {
 
 function initSound() {
     const toggle = document.getElementById('soundToggle');
-    const label = toggle.querySelector('.sound-label');
     const bars = toggle.querySelectorAll('.sound-bars i');
     const enter = document.getElementById('enterExperience');
 
@@ -94,7 +93,7 @@ function initSound() {
         const on = engine.anyPlaying;
         toggle.setAttribute('aria-pressed', on);
         toggle.setAttribute('aria-label', on ? 'Stop music' : 'Play music');
-        label.textContent = on ? 'Sound on' : 'Sound off';
+        toggle.title = on ? 'Stop music' : 'Play music';
     };
     engine.ensure();
     engine.on(sync);
