@@ -591,7 +591,8 @@
   font-family: var(--font-display);
   font-weight: 900;
   text-transform: uppercase;
-  font-size: clamp(1.3rem, 2.6vw, 2rem);
+  font-size: clamp(1.05rem, 2.4vw, 1.85rem);
+  text-wrap: balance;
   line-height: 1;
   letter-spacing: -0.03em;
   position: relative;
@@ -668,6 +669,7 @@
 }
 
 .lineup-poster li {
+  white-space: nowrap; /* a name never splits across lines */
   display: inline-flex;
   align-items: baseline;
   gap: 0.4em;

@@ -206,6 +206,29 @@ function initCopyBio() {
     });
 }
 
+// No orphans: tie the last two words of every text block with a no-break space, so a line
+// never ends the block on one word. CSS text-wrap: pretty only does this for short words.
+// A tie that would push text out of its box is undone; it re-runs when the width changes.
+const tied = [];
+function preventOrphans() {
+    tied.forEach(([node, text]) => { node.nodeValue = text; });
+    tied.length = 0;
+    document.querySelectorAll('h1, h2, h3, p, li, dd, figcaption, blockquote, span, strong, label').forEach(el => {
+        if (el.closest('.lineup-poster, .fit, .loader, [aria-hidden="true"]')) return;
+        if ([...el.children].some(c => getComputedStyle(c).display !== 'inline')) return; // leaf text only
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let last = null;
+        while (walker.nextNode()) if (walker.currentNode.nodeValue.trim()) last = walker.currentNode;
+        if (!last || el.textContent.trim().split(/\s+/).length < 3) return;
+        const text = last.nodeValue;
+        const next = text.replace(/\s+(\S+\s*)$/, '\u00a0$1');
+        if (next === text) return;
+        last.nodeValue = next;
+        tied.push([last, text]);
+        if (el.scrollWidth > el.clientWidth + 1) { last.nodeValue = text; tied.pop(); }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('year').textContent = new Date().getFullYear();
     enhanceButtons();
@@ -222,6 +245,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initRotateBack();
     initCursor();
     initScroll();
+    preventOrphans();
+    document.fonts?.ready.then(preventOrphans); // measure again with the real fonts
+    let lastW = innerWidth, t = 0;
+    addEventListener('resize', () => {
+        if (innerWidth === lastW) return; // ignore phone address-bar height changes
+        lastW = innerWidth;
+        clearTimeout(t);
+        t = setTimeout(preventOrphans, 200);
+    });
     lenis?.stop();
     initLoader();
 });

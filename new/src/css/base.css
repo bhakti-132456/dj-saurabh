@@ -109,6 +109,27 @@ p {
   margin: 0;
 }
 
+/* Typography: headings break into even lines; running text never ends on a lone word */
+h1,
+h2,
+h3,
+h4,
+strong,
+.btn,
+small {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+blockquote,
+figcaption,
+label,
+span {
+  text-wrap: pretty;
+}
+
 kbd {
   font-family: var(--font-body);
   font-size: 0.8em;
