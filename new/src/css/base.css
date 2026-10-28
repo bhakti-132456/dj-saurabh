@@ -10,7 +10,7 @@
   --line: rgba(243, 237, 228, 0.14);
 
   --font-display: 'Archivo', 'Arial Black', sans-serif;
-  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-body: 'Lexend', system-ui, sans-serif;
 
   --gutter: clamp(16px, 4vw, 64px);
   --topbar-h: 68px;
@@ -73,7 +73,8 @@ body {
   color: var(--paper);
   font-family: var(--font-body);
   font-size: 17px;
-  line-height: 1.6;
+  font-weight: 300;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }

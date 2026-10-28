@@ -1,3 +1,9 @@
+// Body face, self-hosted (SIL Open Font License) so it renders the same on every device
+import '@fontsource/lexend/latin-300.css';
+import '@fontsource/lexend/latin-400.css';
+import '@fontsource/lexend/latin-500.css';
+import '@fontsource/lexend/latin-600.css';
+import '@fontsource/lexend/latin-700.css';
 import { engine } from './js/audio.js';
 import { initScroll, scrollToTarget } from './js/scroll.js';
 import { initHero } from './js/hero.js';

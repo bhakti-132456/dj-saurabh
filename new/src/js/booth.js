@@ -137,7 +137,7 @@ function drawWave(ui, deck) {
     ctx.clearRect(0, 0, w, h);
     if (!deck.buffer) {
         ctx.fillStyle = 'rgba(243,237,228,0.4)';
-        ctx.font = '600 12px Archivo, sans-serif';
+        ctx.font = '500 12px Lexend, sans-serif';
         ctx.fillText(deck.loading ? 'Loading…' : 'Press play to load', 10, h / 2 + 4);
         return;
     }
