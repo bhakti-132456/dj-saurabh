@@ -252,51 +252,61 @@ function initCrate() {
 function initLineup() {
     const ul = document.getElementById('lineupPoster');
     if (!ul) return;
-    // An event flier: headliners on top, then each tier below, every row justified to the
-    // full width (so the type steps down as rows get longer), names split by small dots
+    // Mix the tiers so big and small names share the block
+    const pools = lineup.map(tier => [...tier]);
+    const deal = [2, 0, 1, 2, 1, 2, 0, 1, 2];
+    const names = [];
+    for (let i = 0; pools.some(p => p.length); i++) {
+        let t = deal[i % deal.length];
+        if (!pools[t].length) t = pools.findIndex(p => p.length);
+        names.push([pools[t].shift(), t]);
+    }
+
+    // A justified block: names are grouped into rows, every name gets its own size (from its
+    // billing, varied a little), and each row is scaled so its names span the full width.
+    // Only the outer edge is strict; heights inside a row differ.
     let rows = [];
     const build = () => {
         const narrow = innerWidth < 600;
-        const limits = narrow ? [16, 26, 36] : [20, 36, 50]; // characters per row, by tier
+        const budgets = narrow ? [12, 17, 22, 14, 19, 24] : [26, 34, 44, 30, 38, 48];
+        const headline = narrow ? 11 : 18;
         const groups = [];
-        lineup.forEach((tier, t) => {
-            // spread the tier over just enough rows, longest names first into the emptiest
-            // row, so a tier's rows come out about the same length (and so the same size)
-            const len = n => n.length + 2;
-            const total = tier.reduce((sum, n) => sum + len(n), 0);
-            const count = Math.min(tier.length, Math.ceil(total / limits[t]));
-            const bins = Array.from({ length: count }, () => ({ names: [], chars: 0 }));
-            [...tier].sort((a, b) => b.length - a.length).forEach(n => {
-                const bin = bins.reduce((m, x) => (x.chars < m.chars ? x : m));
-                bin.names.push(n);
-                bin.chars += len(n);
-            });
-            // keep the original billing order inside each row; shortest (biggest) row first
-            bins.forEach(b => b.names.sort((x, y) => tier.indexOf(x) - tier.indexOf(y)));
-            bins.sort((x, y) => x.chars - y.chars).forEach(b => groups.push([t, b.names]));
+        let row = [], chars = 0, top = false;
+        names.forEach(([n, t]) => {
+            const limit = top || t === 0 ? headline : budgets[groups.length % budgets.length];
+            if (row.length && chars + n.length > limit) { groups.push(row); row = []; chars = 0; top = false; }
+            row.push([n, t]);
+            chars += n.length + 1;
+            top = top || t === 0;
         });
-        ul.innerHTML = groups.map(([t, g]) => `<li class="tier-${t + 1}">${g.map(n => `<span data-w="1">${n}</span>`)
-            .join('<i class="sep" data-w="0.6" aria-hidden="true">•</i>')}</li>`).join('');
+        if (row.length) groups.push(row);
+        const tierSize = [1, 0.7, 0.5];
+        const vary = [1, 0.84, 1.14, 0.92, 1.06, 0.78];
+        let k = 0;
+        ul.innerHTML = groups.map(g => `<li>${g.map(([n, t]) => {
+            const i = k++;
+            return `<span class="${i % 3 === 1 ? 'is-red' : ''}" data-w="${(tierSize[t] * vary[i % vary.length]).toFixed(3)}">${n}</span>`;
+        }).join('')}</li>`).join('');
         rows = [...ul.children];
         fit();
     };
     const fit = () => {
-        const cs = getComputedStyle(ul);
-        const w = ul.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const w = ul.clientWidth;
         rows.forEach(r => {
-            const spans = [...r.children]; // names and the dots between them
+            const spans = [...r.children];
             const ws = spans.map(sp => Number(sp.dataset.w));
             // width of each name at 100px, then solve for the row scale that fills the line
             spans.forEach(sp => { sp.style.fontSize = '100px'; });
             const nat = spans.map(sp => sp.getBoundingClientRect().width);
-            const gap = 0.16 * 100; // space either side of a dot
+            const gap = 0.22 * Math.min(...ws) * 100; // word space, relative to the smallest name
             const unit = nat.reduce((sum, n, i) => sum + n * ws[i], 0) + gap * (spans.length - 1);
-            let scale = Math.min((w - 2) / unit, (w * 0.3) / (100 * Math.max(...ws)));
+            const cap = (w * 0.3) / (100 * Math.max(...ws));
+            let scale = Math.min((w - 2) / unit, cap);
             const set = () => spans.forEach((sp, i) => { sp.style.fontSize = `${(100 * ws[i] * scale).toFixed(2)}px`; });
             set();
             // type doesn't scale perfectly linearly: correct the last few pixels with a second pass
             const used = spans.reduce((sum, sp) => sum + sp.getBoundingClientRect().width, 0) + gap * scale * (spans.length - 1);
-            if (used > 0 && scale < (w * 0.3) / (100 * Math.max(...ws))) { scale *= (w - 0.5) / used; set(); }
+            if (used > 0 && scale < cap) { scale *= (w - 0.5) / used; set(); }
         });
     };
     build();
@@ -314,19 +324,18 @@ function initLineup() {
             yPercent: 40, opacity: 0, duration: 0.9, ease: 'power4.out', stagger: 0.05,
             scrollTrigger: { trigger: ul, start: 'top 80%' },
         });
-        // A slow ripple runs through the names as the page scrolls; vertical only, so the
-        // block's edges stay straight
+        // A slow wave runs down the rows as the page scrolls
         const wave = ScrollTrigger.create({
             trigger: ul, start: 'top bottom', end: 'bottom top',
             onUpdate: self => {
-                let k = 0;
-                rows.forEach((r, i) => [...r.children].forEach(el => {
-                    const ph = self.progress * Math.PI * 5 - i * 0.6 - k++ * 0.35;
-                    el.style.translate = `0 ${(Math.sin(ph) * 0.045).toFixed(3)}em`;
-                }));
+                const amp = Math.min(10, ul.clientWidth * 0.012);
+                rows.forEach((r, i) => {
+                    const ph = self.progress * Math.PI * 4 - i * 0.55;
+                    r.style.translate = `${(Math.sin(ph) * amp).toFixed(1)}px 0`;
+                });
             },
         });
-        return () => { wave.kill(); rows.forEach(r => [...r.children].forEach(el => { el.style.translate = ''; })); };
+        return () => { wave.kill(); rows.forEach(r => { r.style.translate = ''; }); };
     });
 }
 

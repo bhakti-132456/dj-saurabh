@@ -650,37 +650,25 @@
   margin-bottom: clamp(28px, 4vw, 56px);
 }
 
-/* A flier: rows are sized in JS so each spans the full width, headliners on top */
+/* A justified block of names: each row is sized in JS to span the full width */
 .lineup-poster {
   list-style: none;
   margin: 0 auto;
   padding: 0;
-  max-width: 1100px;
+  max-width: 1200px;
   font-family: var(--font-display);
   font-weight: 800;
   font-stretch: 125%;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 0.92;
   letter-spacing: -0.02em;
-  display: grid;
-  gap: 0.1em;
 }
 
 .lineup-poster li {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   white-space: nowrap;
-}
-
-/* a little air between the tiers */
-.lineup-poster .tier-2:not(.tier-2 + .tier-2),
-.lineup-poster .tier-3:not(.tier-3 + .tier-3) {
-  margin-top: clamp(6px, 1.4vw, 18px);
-}
-
-.lineup-poster .tier-2 {
-  color: var(--red);
 }
 
 .lineup-poster span {
@@ -689,20 +677,14 @@
   transition: transform 0.35s var(--ease-out);
 }
 
-.lineup-poster .sep {
-  font-style: normal;
+.lineup-poster .is-red {
   color: var(--red);
-  line-height: 1;
-}
-
-.lineup-poster .tier-2 .sep {
-  color: var(--ink);
 }
 
 /* hover: the name lifts a hair */
 @media (hover: hover) {
   .lineup-poster span:hover {
-    transform: translateY(-0.05em);
+    transform: translateY(-0.04em);
   }
 }
 
