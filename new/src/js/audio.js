@@ -374,6 +374,24 @@ export class AudioEngine {
         return s;
     }
 
+    // Log-spaced band levels 0..1 into `out` (a Float32Array), for spectrum visuals
+    spectrum(out) {
+        if (!this.ctx || !this.anyPlaying) {
+            for (let i = 0; i < out.length; i++) out[i] *= 0.9;
+            return out;
+        }
+        this.analyser.getByteFrequencyData(this.freq);
+        const n = out.length, max = this.freq.length * 0.7;
+        for (let i = 0; i < n; i++) {
+            const a = Math.floor(Math.pow(max, i / n)), b = Math.max(a + 1, Math.floor(Math.pow(max, (i + 1) / n)));
+            let s = 0;
+            for (let j = a; j < b; j++) s += this.freq[j];
+            const v = s / ((b - a) * 255);
+            out[i] += (v - out[i]) * 0.4;
+        }
+        return out;
+    }
+
     // ---- FX pads (synthesised, no samples needed) ----
     async fx(name) {
         await this.resume();

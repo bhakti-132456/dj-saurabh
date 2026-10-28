@@ -1169,3 +1169,145 @@
     justify-content: center;
   }
 }
+
+/* ---------- BOOTH PREVIEW ---------- */
+.booth-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: center;
+  padding: clamp(80px, 10vw, 150px) var(--gutter);
+  background: radial-gradient(70% 60% at 30% 50%, #1c0605, #070606 70%);
+}
+
+.bp-stage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  perspective: 900px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #050404;
+  border: 1px solid #2c2626;
+}
+
+.bp-wall {
+  position: absolute;
+  inset: 8% 14% 46%;
+  border-radius: 4px;
+  background: repeating-radial-gradient(circle at 50% 50%, #e3120b 0 6%, #1a0302 6% 14%);
+  animation: bp-pulse 0.49s ease-out infinite;
+}
+
+@keyframes bp-pulse {
+  0% { filter: brightness(1.4); transform: scale(1.02); }
+  100% { filter: brightness(0.75); transform: scale(1); }
+}
+
+.bp-table {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  width: 70%;
+  height: 26%;
+  transform: translateX(-50%) rotateX(52deg);
+  transform-style: preserve-3d;
+}
+
+.bp-arm {
+  position: absolute;
+  bottom: 0;
+  width: 56%;
+  height: 34%;
+  background: #1a1414;
+  border-top: 3px solid var(--red);
+  box-shadow: 0 0 24px rgba(227, 18, 11, 0.45);
+}
+
+.bp-left {
+  left: 0;
+  transform-origin: 100% 100%;
+  transform: rotate(-24deg);
+}
+
+.bp-right {
+  right: 0;
+  transform-origin: 0 100%;
+  transform: rotate(24deg);
+}
+
+.bp-disc {
+  position: absolute;
+  left: 24%;
+  bottom: 22%;
+  width: 14%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #111 0 1.5px, #1d1a1a 1.5px 3px);
+}
+
+.bp-disc span {
+  position: absolute;
+  inset: 32%;
+  border-radius: 50%;
+  background: var(--red) url('/favicon.png') center / 70% no-repeat;
+  animation: spin 1.8s linear infinite;
+}
+
+.bp-copy {
+  display: grid;
+  gap: 24px;
+  justify-items: start;
+}
+
+.bp-copy p {
+  color: #ddd5cb;
+  max-width: 44ch;
+}
+
+.rotate-back {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: var(--gutter);
+  text-align: center;
+  font-weight: 600;
+  background: rgba(5, 4, 4, 0.94);
+}
+
+.rotate-phone {
+  width: 112px;
+  height: 64px;
+  border: 3px solid var(--paper);
+  border-radius: 14px;
+  position: relative;
+  animation: turn-back 2.2s var(--ease-out) infinite;
+}
+
+.rotate-phone span {
+  position: absolute;
+  inset: 18% 34%;
+  border-radius: 50%;
+  background: var(--red) url('/favicon.png') center / 70% no-repeat;
+}
+
+@keyframes turn-back {
+  0%, 20% { transform: rotate(0); }
+  55%, 100% { transform: rotate(90deg); }
+}
+
+@media (max-width: 900px) {
+  .booth-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .bp-copy {
+    justify-items: center;
+    text-align: center;
+  }
+}

@@ -44,7 +44,9 @@ function initTopbar() {
         onToggle: self => bar.classList.toggle('is-solid', self.isActive),
     });
     links.forEach(link => {
-        const sec = document.querySelector(link.getAttribute('href'));
+        const href = link.getAttribute('href');
+        if (!href.startsWith('#')) return; // links to other pages, e.g. the booth
+        const sec = document.querySelector(href);
         if (!sec) return;
         ScrollTrigger.create({
             trigger: sec,

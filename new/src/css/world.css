@@ -1,0 +1,424 @@
+/* ---------- The Booth: full-screen 3D world with console panels ---------- */
+.booth-page {
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+  background: #050404;
+  touch-action: manipulation;
+}
+
+#world {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+}
+
+.is-lite #world {
+  display: none;
+}
+
+/* Top bar */
+.bt-bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) max(var(--gutter), env(safe-area-inset-right)) 10px max(var(--gutter), env(safe-area-inset-left));
+  background: linear-gradient(rgba(5, 4, 4, 0.85), rgba(5, 4, 4, 0));
+}
+
+.bt-back {
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.bt-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 237, 228, 0.18);
+  background: rgba(5, 4, 4, 0.6);
+}
+
+.bt-tabs button {
+  font: 600 0.85rem var(--font-body);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.bt-tabs button[aria-current="true"] {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+[data-mode="gate"] .bt-tabs {
+  visibility: hidden;
+}
+
+/* Hotspots that sit on the consoles in the overview */
+.hotspots {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hotspot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+
+[data-mode="overview"] .hotspot {
+  opacity: 1;
+}
+
+[data-mode]:not([data-mode="overview"]) .hotspot {
+  pointer-events: none;
+}
+
+.hotspot span {
+  display: inline-block;
+  transform: translate(-50%, -170%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font: 600 0.92rem var(--font-body);
+  white-space: nowrap;
+  box-shadow: 0 0 0 6px rgba(227, 18, 11, 0.25);
+  animation: hotspot 2.4s var(--ease-out) infinite;
+}
+
+@keyframes hotspot {
+  50% {
+    box-shadow: 0 0 0 12px rgba(227, 18, 11, 0);
+  }
+}
+
+/* No WebGL: the hotspots become two big plain buttons */
+.is-lite .hotspots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.is-lite .hotspot {
+  position: static;
+  transform: none !important;
+}
+
+.is-lite .hotspot span {
+  transform: none;
+  font-size: 1.1rem;
+  padding: 16px 24px;
+}
+
+/* Gate */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: var(--gutter);
+  text-align: center;
+  background: radial-gradient(60% 60% at 50% 55%, rgba(5, 4, 4, 0.35), rgba(5, 4, 4, 0.92));
+  transition: opacity 0.8s var(--ease-out), visibility 0.8s;
+}
+
+.gate.is-gone {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.gate h1 {
+  font-size: clamp(2.6rem, min(9vw, 16vh), 6.5rem);
+}
+
+.gate p {
+  max-width: 44ch;
+  color: #ddd5cb;
+}
+
+.gate .gate-small {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Console panels: a bottom sheet, the club stays visible above */
+.panel {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 15;
+  width: min(1180px, calc(100% - 24px));
+  max-height: 58vh;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(10, 8, 8, 0.9);
+  border: 1px solid #2c2626;
+  display: grid;
+  gap: 12px;
+  animation: sheet 0.6s var(--ease-out);
+}
+
+@keyframes sheet {
+  from {
+    transform: translate(-50%, 30px);
+    opacity: 0;
+  }
+}
+
+.panel .console {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.panel .mixer,
+.panel .deck[data-deck] {
+  grid-column: auto;
+  grid-row: auto;
+  order: 0;
+}
+
+.panel .deck-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.panel .deck-top {
+  flex-wrap: nowrap;
+}
+
+.panel .deck,
+.panel .mixer {
+  padding: 10px;
+  gap: 8px 10px;
+}
+
+.panel .deck-wave {
+  height: 34px;
+}
+
+.panel .platter {
+  width: min(100%, 22vh, 210px);
+}
+
+.panel .channel {
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.panel .channel .vrange {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-height: 70px;
+  height: 14vh;
+}
+
+.panel .vu {
+  min-height: 0;
+}
+
+.panel .knob-dial {
+  width: 32px;
+  height: 32px;
+}
+
+.panel .vrange {
+  min-height: 80px;
+}
+
+.panel .pitch .vrange {
+  height: 16vh;
+}
+
+.panel .pads {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.panel .fx-pad {
+  aspect-ratio: auto;
+  height: 52px;
+}
+
+.panel .transport .pad-btn {
+  padding: 9px 4px;
+  font-size: 0.82rem;
+}
+
+.panel .mixer-title {
+  display: none;
+}
+
+/* VJ panel */
+.panel .vj-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.panel .vj-scenes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.panel .vj-side {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.panel-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Rotate prompt */
+.rotate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+  padding: var(--gutter);
+  text-align: center;
+  background: rgba(5, 4, 4, 0.94);
+  font-weight: 600;
+}
+
+.rotate-phone {
+  width: 64px;
+  height: 112px;
+  border: 3px solid var(--paper);
+  border-radius: 14px;
+  position: relative;
+  animation: turn 2.2s var(--ease-out) infinite;
+}
+
+.rotate-phone span {
+  position: absolute;
+  inset: 26% 18%;
+  border-radius: 50%;
+  background: var(--red) url('/favicon.png') center / 70% no-repeat;
+  animation: spin 1.8s linear infinite;
+}
+
+@keyframes turn {
+
+  0%,
+  20% {
+    transform: rotate(0);
+  }
+
+  55%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* Phones on their side: compact everything to fit the short screen */
+@media (max-height: 520px) {
+  .bt-bar {
+    padding-top: max(6px, env(safe-area-inset-top));
+    padding-bottom: 6px;
+  }
+
+  .bt-tabs button {
+    padding: 5px 11px;
+  }
+
+  .panel {
+    max-height: 74vh;
+    padding: 8px;
+    gap: 8px;
+    bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .panel .console {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px) minmax(0, 1fr);
+  }
+
+  .panel .deck-wave {
+    height: 26px;
+  }
+
+  .panel .deck-top {
+    font-size: 0.8rem;
+  }
+
+  .panel .platter {
+    width: min(100%, 30vh);
+  }
+
+  .panel .fx-pad {
+    height: 40px;
+    font-size: 0.75rem;
+  }
+
+  .panel .fx-pad small {
+    display: none;
+  }
+
+  .panel .knob-dial {
+    width: 28px;
+    height: 28px;
+  }
+
+  .panel .knob span {
+    display: none;
+  }
+}
+
+/* Upright phones (if they stay in portrait): stack the console and scroll the sheet */
+@media (max-width: 700px) {
+  .panel {
+    max-height: 66vh;
+  }
+
+  .panel .console,
+  .panel .vj-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel .vj-scenes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .panel .pads {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bt-back {
+    font-size: 0.9rem;
+  }
+}

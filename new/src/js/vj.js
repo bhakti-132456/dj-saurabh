@@ -2,8 +2,12 @@ import * as THREE from 'three';
 import { engine } from './audio.js';
 import { sensors, tiltLive, haptic } from './sensors.js';
 
-const SCENES = ['Duotone', 'Tunnel', 'Kaleido', 'Strobe grid', 'VHS roll', 'Logo pulse'];
+// Generative scenes come first: they dance to the music with nothing loaded.
+// The photo scene is optional, for when you want his pictures on the wall.
+export const SCENES = ['Pulse', 'Tunnel', 'Spectrum', 'Warp', 'Strobe grid', 'Logo', 'Photo FX'];
 const COLORS = ['Red', 'Mono', 'Invert'];
+const BANDS = 24;
+const IDLE_BPM = 122;
 
 const frag = /* glsl */`
 precision highp float;
@@ -16,226 +20,222 @@ uniform int uScene, uPrev, uColor;
 uniform float uMix;
 uniform float uStrobe;
 uniform vec2 uTilt;
-uniform sampler2D uPhotoA, uPhotoB, uLogo;
+uniform float uGain;
+uniform float uSpec[${BANDS}];
+uniform sampler2D uPhoto, uLogo;
 
 #define PI 3.14159265
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
-
-vec2 cover(vec2 uv, float imgAspect) {
-  float sa = uRes.x / uRes.y;
-  vec2 p = uv - 0.5;
-  if (sa > imgAspect) p.y *= imgAspect / sa; else p.x *= sa / imgAspect;
-  return p + 0.5;
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
 }
-
+float band(float x) {
+  // read the spectrum at 0..1 without dynamic indexing (GLSL ES 1.0 safe)
+  float idx = clamp(x, 0.0, 0.999) * ${BANDS}.0;
+  float v = 0.0;
+  for (int i = 0; i < ${BANDS}; i++) { if (float(i) <= idx && idx < float(i + 1)) v = uSpec[i]; }
+  return v;
+}
 float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 
 float scene(int m, vec2 uv) {
-  float t = uTime;
-  float I = uIntensity;
-  vec2 c = (uv - 0.5 - uTilt * 0.18) * vec2(uRes.x / uRes.y, 1.0);
-  if (m == 0) { // Duotone: photo, slices kicked sideways by the kick
-    float slice = floor(uv.y * 24.0);
-    float kick = (hash(vec2(slice, floor(t * 8.0))) - 0.5) * uBass * 0.18 * I;
-    vec2 p = cover(uv + vec2(kick, 0.0), 0.6667);
-    p = (p - 0.5) * (1.0 - uBass * 0.08 * I) + 0.5;
-    return lum(texture2D(uPhotoA, p).rgb) * 1.25;
+  float t = uTime, I = uIntensity;
+  float aspect = uRes.x / uRes.y;
+  vec2 c = (uv - 0.5 - uTilt * 0.12) * vec2(aspect, 1.0);
+  float r = length(c), a = atan(c.y, c.x);
+  if (m == 0) { // Pulse: rings that leave the centre on every kick
+    float rings = sin(r * 26.0 - t * 4.0 - uBass * 6.0 * I);
+    float shape = smoothstep(0.75, 1.0, rings) * (0.5 + uBass * 1.4 * I);
+    float core = smoothstep(0.32 + uBass * 0.25 * I, 0.0, r);
+    float grain = noise(c * 6.0 + t) * uHigh * 0.5;
+    return shape * smoothstep(1.2, 0.1, r) + core + grain * 0.4;
   }
   if (m == 1) { // Tunnel
-    float r = length(c) + 1e-3;
-    float a = atan(c.y, c.x);
-    float z = 0.35 / r + t * (0.6 + uMid * 2.0 * I);
+    float z = 0.35 / (r + 1e-3) + t * (0.6 + uMid * 2.0 * I);
     float rings = step(0.5, fract(z * 2.0));
     float spokes = step(0.5, fract(a / PI * (4.0 + floor(uHigh * 6.0))));
     return mix(rings, rings * spokes, 0.5) * smoothstep(0.0, 0.25, r) * (0.6 + uBass * I);
   }
-  if (m == 2) { // Kaleido of the second photo
-    float r = length(c);
-    float a = atan(c.y, c.x) + t * 0.2 + uTilt.x * 1.5;
-    float seg = PI / 3.0;
-    a = mod(a, seg);
-    a = abs(a - seg * 0.5);
-    vec2 p = vec2(cos(a), sin(a)) * r * (0.9 - uBass * 0.25 * I) + vec2(0.5, 0.45);
-    return lum(texture2D(uPhotoB, p).rgb) * 1.4;
+  if (m == 2) { // Spectrum: mirrored bars from the middle out
+    float x = abs(uv.x - 0.5) * 2.0;
+    float h = band(x) * (0.6 + 0.8 * I);
+    float bar = step(abs(uv.y - 0.5) * 2.0, h) * step(0.18, fract(x * ${BANDS}.0));
+    float glow = smoothstep(h + 0.25, h, abs(uv.y - 0.5) * 2.0) * 0.25;
+    return bar + glow;
   }
-  if (m == 3) { // Strobe grid
+  if (m == 3) { // Warp: streaks flying past, faster with the mids
+    float v = 0.0;
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float ang = floor(a / PI * (40.0 + fi * 14.0)) ;
+      float seed = hash(vec2(ang, fi));
+      float pos = fract(seed + t * (0.25 + uMid * 1.2 * I) * (1.0 + fi * 0.4));
+      float d = abs(r - pos * 1.4);
+      v += smoothstep(0.06 + uBass * 0.08, 0.0, d) * step(0.55, seed) * pos;
+    }
+    return v * 1.5 + smoothstep(0.25, 0.0, r) * uBass;
+  }
+  if (m == 4) { // Strobe grid
     vec2 g = floor(uv * vec2(8.0, 4.5));
     float on = step(1.0 - (0.15 + uHigh * 0.7 * I), hash(g + floor(t * (4.0 + uBeat * 8.0))));
     vec2 f = fract(uv * vec2(8.0, 4.5));
     float box = step(0.06, f.x) * step(0.06, f.y) * step(f.x, 0.94) * step(f.y, 0.94);
     return on * box * (0.5 + uBass);
   }
-  if (m == 4) { // VHS roll
-    vec2 p = uv;
-    p.y = fract(p.y + t * 0.05 + uBass * 0.04 * I);
-    float band = step(0.97 - uMid * 0.2 * I, hash(vec2(floor(p.y * 80.0), floor(t * 12.0))));
-    p.x += band * 0.08 + sin(p.y * 40.0 + t * 10.0) * 0.004 * I;
-    float l = lum(texture2D(uPhotoA, cover(p, 0.6667)).rgb);
-    float lines = 0.8 + 0.2 * sin(uv.y * uRes.y * 1.5);
-    return (l * 1.2 + band * 0.4) * lines;
+  if (m == 5) { // Logo pulse
+    float s = 1.6 - uBass * 0.5 * I;
+    vec2 p = (uv - 0.5) * vec2(aspect, 1.0) * s / vec2(2.85, 1.0) + 0.5;
+    float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
+    float logo = texture2D(uLogo, p).a * inside;
+    float echo = texture2D(uLogo, (p - 0.5) * (1.0 + uBass * 0.3) + 0.5).a * inside * 0.4;
+    return max(logo, echo) + (hash(uv + t) - 0.5) * 0.08;
   }
-  // Logo pulse
-  float s = 1.6 - uBass * 0.5 * I;
-  vec2 p = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0) * s / vec2(2.85, 1.0) + 0.5;
-  float inside = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);
-  float logo = texture2D(uLogo, p).a * inside;
-  float echo = texture2D(uLogo, (p - 0.5) * (1.0 + uBass * 0.3) + 0.5).a * inside * 0.4;
-  return max(logo, echo) + (hash(uv + t) - 0.5) * 0.08;
+  // Photo FX (optional): his photo, sliced by the kick
+  float slice = floor(uv.y * 24.0);
+  float kick = (hash(vec2(slice, floor(t * 8.0))) - 0.5) * uBass * 0.18 * I;
+  vec2 p = uv + vec2(kick, 0.0) - 0.5;
+  if (aspect > 0.6667) p.y *= 0.6667 / aspect; else p.x *= aspect / 0.6667;
+  p = p * (1.0 - uBass * 0.08 * I) + 0.5;
+  return lum(texture2D(uPhoto, p).rgb) * 1.25;
 }
 
 void main() {
   float v = mix(scene(uPrev, vUv), scene(uScene, vUv), uMix);
   v = clamp(v, 0.0, 1.0);
+  vec3 red = vec3(0.89, 0.07, 0.04);
   vec3 col;
-  if (uColor == 0) col = mix(vec3(0.0), vec3(0.89, 0.07, 0.04), smoothstep(0.05, 0.55, v)) + vec3(1.0, 0.95, 0.9) * smoothstep(0.75, 1.0, v);
+  if (uColor == 0) col = mix(vec3(0.0), red, smoothstep(0.05, 0.55, v)) + vec3(1.0, 0.95, 0.9) * smoothstep(0.75, 1.0, v);
   else if (uColor == 1) col = vec3(v);
-  else col = vec3(1.0) - mix(vec3(0.0), vec3(0.89, 0.07, 0.04), v) - vec3(v * 0.3);
+  else col = vec3(1.0) - mix(vec3(0.0), red, v) - vec3(v * 0.3);
   col = mix(col, vec3(1.0), uStrobe * step(0.5, fract(uTime * 12.0)));
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col * uGain, 1.0);
 }
 `;
 
-export function initVJ() {
-    const canvas = document.getElementById('vjCanvas');
-    const controls = document.getElementById('vjControls');
-    const live = document.getElementById('vjLive');
-    if (!canvas) return;
+const vert = /* glsl */`
+varying vec2 vUv;
+void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+`;
 
-    let renderer;
-    try {
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
-    } catch {
-        canvas.parentElement.innerHTML = '<p style="padding:20px">This screen needs WebGL.</p>';
-        return;
-    }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-
+// One VJ engine; its material can be put on any number of surfaces (LED wall, laptop screen)
+export function createVJ() {
     const loader = new THREE.TextureLoader();
     const tex = src => loader.load(src, t => {
         t.colorSpace = THREE.SRGBColorSpace;
         t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
     });
+    const spec = new Float32Array(BANDS);
     const u = {
-        uRes: { value: new THREE.Vector2(16, 9) },
+        uRes: { value: new THREE.Vector2(1920, 1080) },
         uTime: { value: 0 },
         uBass: { value: 0 }, uMid: { value: 0 }, uHigh: { value: 0 }, uBeat: { value: 0 },
-        uIntensity: { value: 0.7 },
+        uIntensity: { value: 0.75 },
         uScene: { value: 0 }, uPrev: { value: 0 }, uMix: { value: 1 },
         uColor: { value: 0 },
         uStrobe: { value: 0 },
         uTilt: { value: new THREE.Vector2(0, 0) },
-        uPhotoA: { value: tex('/media/deck-hands-900.webp') },
-        uPhotoB: { value: tex('/media/red-beam-900.webp') },
+        uGain: { value: 0.72 },
+        uSpec: { value: spec },
+        uPhoto: { value: tex('/media/deck-hands-900.webp') },
         uLogo: { value: tex('/logo-tight.png') },
     };
-    const scene = new THREE.Scene();
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
-        fragmentShader: frag,
-        uniforms: u,
-    })));
-    const camera = new THREE.Camera();
+    const material = new THREE.ShaderMaterial({ vertexShader: vert, fragmentShader: frag, uniforms: u, toneMapped: false });
 
-    const resize = () => {
-        const w = canvas.clientWidth, h = canvas.clientHeight;
-        renderer.setSize(w, h, false);
-        u.uRes.value.set(w, h);
-    };
-    new ResizeObserver(resize).observe(canvas);
-    resize();
-
-    // Controls
-    controls.innerHTML = `
-      <div class="vj-scenes" role="group" aria-label="Scenes">
-        ${SCENES.map((s, i) => `<button class="pad-btn${i === 0 ? ' is-on' : ''}" data-scene="${i}" aria-pressed="${i === 0}">${s}</button>`).join('')}
-      </div>
-      <label class="vj-row">Intensity <input type="range" class="hrange" min="0" max="1" step="0.01" value="0.7" data-ctl="intensity"></label>
-      <div class="vj-actions" role="group" aria-label="Colour">
-        ${COLORS.map((c, i) => `<button class="pad-btn${i === 0 ? ' is-on' : ''}" data-color="${i}" aria-pressed="${i === 0}">${c}</button>`).join('')}
-      </div>
-      <div class="vj-actions">
-        <button class="pad-btn" data-ctl="strobe">Hold: strobe</button>
-        <button class="pad-btn" data-ctl="auto" aria-pressed="false">Auto cut</button>
-      </div>
-      <button class="pad-btn" data-ctl="feed">Feed it the booth</button>`;
-
+    const listeners = new Set();
+    let auto = true;
     const setScene = i => {
         if (i === u.uScene.value) return;
         u.uPrev.value = u.uScene.value;
         u.uScene.value = i;
         u.uMix.value = 0;
-        controls.querySelectorAll('[data-scene]').forEach(b => {
-            const on = Number(b.dataset.scene) === i;
-            b.classList.toggle('is-on', on);
-            b.setAttribute('aria-pressed', on);
-        });
+        listeners.forEach(fn => fn());
     };
-    let auto = false;
-    controls.addEventListener('click', e => {
-        const b = e.target.closest('button');
-        if (!b) return;
-        if (b.dataset.scene) setScene(Number(b.dataset.scene));
-        if (b.dataset.color) {
-            u.uColor.value = Number(b.dataset.color);
-            controls.querySelectorAll('[data-color]').forEach(x => {
-                x.classList.toggle('is-on', x === b);
-                x.setAttribute('aria-pressed', x === b);
-            });
-        }
-        if (b.dataset.ctl === 'auto') {
-            auto = !auto;
-            b.classList.toggle('is-on', auto);
-            b.setAttribute('aria-pressed', auto);
-        }
-        if (b.dataset.ctl === 'feed') engine.decks.A.play();
-    });
-    controls.querySelector('[data-ctl="intensity"]').addEventListener('input', e => { u.uIntensity.value = Number(e.target.value); });
-    const strobe = controls.querySelector('[data-ctl="strobe"]');
-    const strobeOn = v => { u.uStrobe.value = v; strobe.classList.toggle('is-on', !!v); };
-    strobe.addEventListener('pointerdown', () => strobeOn(1));
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => strobe.addEventListener(ev, () => strobeOn(0)));
 
-    // Tap the screen to cut to the next scene
-    canvas.addEventListener('click', () => {
-        haptic(12);
-        setScene((u.uScene.value + 1) % SCENES.length);
-    });
-
-    let visible = false;
-    new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(canvas);
-
-    const clock = new THREE.Clock();
     let lastBass = 0, beatCount = 0, lastBeatT = 0;
-    renderer.setAnimationLoop(() => {
-        if (!visible) return;
-        const t = clock.getElapsedTime();
+    const tilt = new THREE.Vector2();
+    // Called once per frame by whoever renders the world. Returns the frame's levels for reuse.
+    const update = t => {
         u.uTime.value = t;
         const lv = engine.levels();
-        const isLive = engine.anyPlaying;
         let bass = lv.bass, mid = lv.mid, high = lv.high;
-        if (!isLive) {
-            // internal clock at 122 bpm so the screen is never dead
-            const ph = (t * 122 / 60) % 1;
-            bass = Math.pow(1 - ph, 4) * 0.8;
+        const live = engine.anyPlaying;
+        engine.spectrum(spec);
+        if (!live) {
+            // internal clock so the wall is never dead
+            const ph = (t * IDLE_BPM / 60) % 1;
+            bass = Math.pow(1 - ph, 4) * 0.7;
             mid = 0.3 + 0.2 * Math.sin(t);
             high = 0.25 + 0.25 * Math.sin(t * 3.1);
+            for (let i = 0; i < BANDS; i++) spec[i] = 0.25 + 0.25 * Math.sin(t * 2 + i * 0.6) * (1 - i / BANDS) + bass * 0.4 * (1 - i / BANDS);
         }
         u.uBass.value = bass; u.uMid.value = mid; u.uHigh.value = high;
 
-        // crude beat detector for auto cuts
-        if (bass - lastBass > 0.12 && t - lastBeatT > 0.3) {
+        let beat = false;
+        if (bass - lastBass > 0.12 && t - lastBeatT > 0.28) {
             lastBeatT = t;
+            beat = true;
             u.uBeat.value = 1;
-            if (auto && ++beatCount % 8 === 0) setScene((u.uScene.value + 1 + Math.floor(Math.random() * (SCENES.length - 1))) % SCENES.length);
+            // cut to a new generative scene every 16 beats
+            if (auto && ++beatCount % 16 === 0) setScene((u.uScene.value + 1 + Math.floor(Math.random() * 4)) % 6);
         }
         u.uBeat.value *= 0.9;
         lastBass = bass;
-        u.uMix.value = Math.min(1, u.uMix.value + 0.04);
-        if (tiltLive()) u.uTilt.value.lerp(new THREE.Vector2(sensors.tiltX, -sensors.tiltY), 0.15);
+        u.uMix.value = Math.min(1, u.uMix.value + 0.035);
+        if (tiltLive()) u.uTilt.value.lerp(tilt.set(sensors.tiltX, -sensors.tiltY), 0.15);
+        return { bass, mid, high, beat, live };
+    };
 
-        live.textContent = isLive ? 'Live input: booth' : 'Live input: internal clock';
-        live.classList.toggle('is-live', isLive);
-        renderer.render(scene, camera);
-    });
+    // Control panel for the VJ side of the booth
+    const mountControls = el => {
+        el.innerHTML = `
+          <div class="vj-scenes" role="group" aria-label="Scenes">
+            ${SCENES.map((s, i) => `<button class="pad-btn" data-scene="${i}">${s}</button>`).join('')}
+          </div>
+          <div class="vj-side">
+            <label class="vj-row">Intensity <input type="range" class="hrange" min="0" max="1" step="0.01" value="0.75" data-ctl="intensity"></label>
+            <div class="vj-actions" role="group" aria-label="Colour">
+              ${COLORS.map((c, i) => `<button class="pad-btn${i === 0 ? ' is-on' : ''}" data-color="${i}" aria-pressed="${i === 0}">${c}</button>`).join('')}
+            </div>
+            <div class="vj-actions">
+              <button class="pad-btn" data-ctl="strobe">Hold: strobe</button>
+              <button class="pad-btn is-on" data-ctl="auto" aria-pressed="true">Auto cut</button>
+            </div>
+          </div>`;
+        const sync = () => el.querySelectorAll('[data-scene]').forEach(b => {
+            const on = Number(b.dataset.scene) === u.uScene.value;
+            b.classList.toggle('is-on', on);
+            b.setAttribute('aria-pressed', on);
+        });
+        listeners.add(sync);
+        sync();
+        el.addEventListener('click', e => {
+            const b = e.target.closest('button');
+            if (!b) return;
+            haptic(10);
+            if (b.dataset.scene) setScene(Number(b.dataset.scene));
+            if (b.dataset.color) {
+                u.uColor.value = Number(b.dataset.color);
+                el.querySelectorAll('[data-color]').forEach(x => {
+                    x.classList.toggle('is-on', x === b);
+                    x.setAttribute('aria-pressed', x === b);
+                });
+            }
+            if (b.dataset.ctl === 'auto') {
+                auto = !auto;
+                b.classList.toggle('is-on', auto);
+                b.setAttribute('aria-pressed', auto);
+            }
+        });
+        el.querySelector('[data-ctl="intensity"]').addEventListener('input', e => { u.uIntensity.value = Number(e.target.value); });
+        const strobe = el.querySelector('[data-ctl="strobe"]');
+        const strobeOn = v => { u.uStrobe.value = v; strobe.classList.toggle('is-on', !!v); };
+        strobe.addEventListener('pointerdown', () => strobeOn(1));
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => strobe.addEventListener(ev, () => strobeOn(0)));
+    };
+
+    const next = () => setScene((u.uScene.value + 1) % SCENES.length);
+    return { material, uniforms: u, update, mountControls, next };
 }

@@ -12,6 +12,7 @@ export default defineConfig({
         // Current live site stays at /, the redesign is served at /new/
         main: resolve(__dirname, 'index.html'),
         new: resolve(__dirname, 'new/index.html'),
+        booth: resolve(__dirname, 'new/booth/index.html'),
       },
     },
   },

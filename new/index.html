@@ -8,6 +8,8 @@
   <meta name="description"
     content="Saurabh Dhiman is an open-format DJ based in Hyderabad, behind the decks since 2013. Deep house, nu-disco, tech house, Bollywood, Punjabi and hip-hop for clubs, weddings, corporate and private events." />
   <meta name="theme-color" content="#0b0a0a" />
+  <!-- staging under /new: keep it out of search until it replaces the live site -->
+  <meta name="robots" content="noindex" />
 
   <meta property="og:type" content="profile" />
   <meta property="og:title" content="Saurabh Dhiman | Open-Format DJ, Hyderabad" />
@@ -39,7 +41,6 @@
 
   <link rel="stylesheet" href="./src/css/base.css" />
   <link rel="stylesheet" href="./src/css/sections.css" />
-  <link rel="stylesheet" href="./src/css/booth.css" />
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="preload" as="image" href="/media/cutout-wide.webp" media="(orientation: landscape)">
   <link rel="preload" as="image" href="/media/cutout-tall.webp" media="(orientation: portrait)">
@@ -65,7 +66,7 @@
     <nav class="topbar-nav" aria-label="Sections">
       <a href="#story">Story</a>
       <a href="#timeline">The set</a>
-      <a href="#booth">Booth</a>
+      <a href="./booth/">Booth</a>
       <a href="#visuals">Visuals</a>
       <a href="#gallery">Gallery</a>
     </nav>
@@ -197,36 +198,30 @@
       <ul class="lineup-poster" id="lineupPoster"></ul>
     </section>
 
-    <!-- THE BOOTH: playable DJ console -->
-    <section class="booth" id="booth">
-      <div class="booth-head">
-        <h2>Take the booth</h2>
-        <p>Two decks loaded with Saurabh's deep house mix. Spin the platters to scratch, ride the EQs, throw the
-          crossfader. Keyboard: <kbd>Q</kbd> / <kbd>P</kbd> play, <kbd>1</kbd>–<kbd>5</kbd> pads,
-          <kbd>←</kbd> <kbd>→</kbd> crossfader. On a phone, tilt to crossfade and shake for the air horn.</p>
+    <!-- THE BOOTH: preview; the full 3D booth lives on its own page -->
+    <section class="booth-preview" id="booth-preview">
+      <div class="bp-stage" aria-hidden="true">
+        <div class="bp-wall"></div>
+        <div class="bp-table"><span class="bp-arm bp-left"></span><span class="bp-arm bp-right"></span></div>
+        <div class="bp-disc"><span></span></div>
       </div>
-      <div class="console" id="console">
-        <div class="deck" data-deck="A"></div>
-        <div class="mixer" id="mixer"></div>
-        <div class="deck" data-deck="B"></div>
+      <div class="bp-copy">
+        <h2>Step into the booth</h2>
+        <p>A virtual DJ booth you can play in your browser. Mix Saurabh's decks on one side, run the visuals on the
+          LED wall on the other. Nothing to install.</p>
+        <a href="./booth/" class="btn btn-red btn-large">Enter the booth<span class="btn-icon" aria-hidden="true"><svg
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg></span></a>
       </div>
-      <div class="pads" id="pads"></div>
     </section>
 
-    <!-- VISUALS: VJ console -->
     <section class="visuals" id="visuals">
       <div class="visuals-head">
         <h2>Beyond the decks</h2>
         <p>Saurabh also builds the picture: video sets synced to his live performances, video edits and remixes for
-          events and social, and lyric videos for artists and labels. Run the screen yourself. It listens to whatever
-          is playing in the booth.</p>
-      </div>
-      <div class="vj">
-        <div class="vj-screen">
-          <canvas id="vjCanvas"></canvas>
-          <span class="vj-live" id="vjLive">Live input: idle</span>
-        </div>
-        <div class="vj-controls" id="vjControls"></div>
+          events and social, and lyric videos for artists and labels.</p>
       </div>
       <ul class="services">
         <li><strong>Video sets</strong><span>Custom visuals cut to the music and run live alongside the DJ set.</span>
@@ -377,7 +372,7 @@
       <a href="#story">Story</a>
       <a href="#timeline">The set</a>
       <a href="#venues">Rooms</a>
-      <a href="#booth">Booth</a>
+      <a href="./booth/">Booth</a>
       <a href="#visuals">Visuals</a>
       <a href="#gallery">Gallery</a>
       <a href="#book">Book an event</a>

@@ -7,8 +7,6 @@ import '@fontsource/lexend/latin-700.css';
 import { engine } from './js/audio.js';
 import { initScroll, scrollToTarget } from './js/scroll.js';
 import { initHero } from './js/hero.js';
-import { initBooth } from './js/booth.js';
-import { initVJ } from './js/vj.js';
 import { initBookingForm } from './js/booking.js';
 import { enableSensors, autoEnableSensors } from './js/sensors.js';
 import { lenis } from './js/scroll.js';
@@ -111,7 +109,7 @@ function initSound() {
         try {
             await engine.decks.A.play();
             const tilt = await motion;
-            toast(tilt ? 'Deck A is live. Tilt your phone, then take over the booth.' : 'Deck A is live. Scroll down and take over the booth.');
+            toast(tilt ? 'Deck A is live. Tilt your phone to move him.' : 'Deck A is live. Step into the booth to take over.');
         } finally {
             enter.disabled = false;
             setButtonLabel(enter, 'Enter the experience');
@@ -153,6 +151,21 @@ function initCursor() {
         });
         b.addEventListener('pointerleave', () => { b.style.transform = ''; });
     });
+}
+
+// Back from the booth on a phone still held sideways: a short nudge to turn it upright
+function initRotateBack() {
+    if (!sessionStorage.getItem('fromBooth')) return;
+    sessionStorage.removeItem('fromBooth');
+    const portrait = matchMedia('(orientation: portrait)');
+    if (portrait.matches) return;
+    const el = document.createElement('div');
+    el.className = 'rotate-back';
+    el.innerHTML = '<div class="rotate-phone is-back" aria-hidden="true"><span></span></div><p>Turn your phone upright for the rest of the site</p><button class="btn btn-ghost btn-small">Keep landscape</button>';
+    document.body.append(el);
+    const close = () => el.remove();
+    el.querySelector('button').addEventListener('click', close);
+    portrait.addEventListener('change', e => { if (e.matches) close(); });
 }
 
 function initMenu() {
@@ -197,11 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initSound();
     autoEnableSensors();
     initHero();
-    initBooth();
-    initVJ();
     initBookingForm();
     initCopyBio();
     initMenu();
+    initRotateBack();
     initCursor();
     initScroll();
     lenis?.stop();
