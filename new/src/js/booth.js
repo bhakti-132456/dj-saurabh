@@ -184,7 +184,32 @@ function drawWave(ui, deck) {
     ctx.fillRect(played * w - 1, 0, 2, h);
 }
 
-export function initBooth() {
+// Scale the console as one piece so all of it is visible without scrolling.
+// `avail` returns the space it may use; the layout flips to the upright design on narrow screens.
+function fitConsole(host, avail) {
+    const fit = document.createElement('div');
+    fit.className = 'fit';
+    fit.append(...host.children);
+    const box = document.createElement('div');
+    box.className = 'fit-box';
+    box.append(fit);
+    host.append(box);
+    const apply = () => {
+        const { w, h } = avail();
+        fit.dataset.layout = w < 640 && h > w ? 'port' : 'land';
+        fit.style.transform = 'none';
+        const s = Math.min(1, w / fit.offsetWidth, h / fit.offsetHeight);
+        fit.style.transform = `scale(${s})`;
+        box.style.width = `${fit.offsetWidth * s}px`;
+        box.style.height = `${fit.offsetHeight * s}px`;
+    };
+    apply();
+    addEventListener('resize', apply);
+    document.fonts?.ready.then(apply);
+    return apply;
+}
+
+export function initBooth(avail) {
     const consoleEl = document.getElementById('console');
     if (!consoleEl) return;
     engine.ensure();
@@ -332,4 +357,8 @@ export function initBooth() {
         });
     };
     requestAnimationFrame(loop);
+
+    const host = document.getElementById('booth');
+    const fallback = () => ({ w: host.clientWidth - 24, h: innerHeight - 110 });
+    return fitConsole(host, avail || fallback);
 }

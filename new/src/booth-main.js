@@ -19,7 +19,12 @@ try {
 } catch {
     document.body.classList.add('is-lite'); // no WebGL: consoles still work, in flat panels
 }
-initBooth();
+// The DJ panel sits under the top bar; on tall screens it leaves the club visible above it
+const bar = document.querySelector('.bt-bar');
+const fitDJ = initBooth(() => ({
+    w: innerWidth - 52,
+    h: Math.min(innerHeight - bar.offsetHeight - 44, innerHeight > 700 ? innerHeight * 0.62 : Infinity),
+}));
 vj.mountControls($('#vjControls'));
 autoEnableSensors();
 
@@ -29,6 +34,7 @@ const go = name => {
     document.querySelectorAll('.panel').forEach(p => { p.hidden = p.dataset.panel !== name; });
     document.querySelectorAll('.bt-tabs [data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === name));
     world?.fly(name);
+    if (name === 'dj') requestAnimationFrame(fitDJ);
     history.replaceState(null, '', name === 'overview' ? location.pathname : `#${name}`);
     haptic(8);
 };

@@ -1,99 +1,272 @@
-/* Compact console layout, shared by the booth panels and the homepage preview */
-.compact .console {
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr);
-  gap: 10px;
+/* Compact console, shared by the booth panel and the homepage preview.
+   The console is laid out at a fixed design size, like a hardware controller, and
+   scaled as one piece to fit the screen (see fitConsole in booth.js), so it never
+   needs scrolling. Two designs: "land" (side by side) and "port" (upright phones). */
+
+.compact {
+  display: grid;
+  justify-items: center;
 }
 
-.compact .mixer,
-.compact .deck[data-deck] {
+.fit {
+  display: grid;
+  gap: 12px;
+  transform-origin: 0 0;
+}
+
+.fit-box {
+  position: relative;
+  overflow: hidden;
+}
+
+.fit .console {
+  display: grid;
+  gap: 12px;
+}
+
+.fit .deck[data-deck],
+.fit .mixer {
   grid-column: auto;
   grid-row: auto;
   order: 0;
+  min-width: 0;
+  padding: 12px;
 }
 
-.compact .deck-title {
+.fit .deck {
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px 10px;
+}
+
+.fit .deck-top {
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.fit .deck-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  font-size: 0.82rem;
 }
 
-.compact .deck-top {
-  flex-wrap: nowrap;
+.fit .deck-time {
+  white-space: nowrap;
+  font-size: 0.8rem;
 }
 
-.compact .deck,
-.compact .mixer {
-  padding: 10px;
-  gap: 8px 10px;
-}
-
-.compact .deck-wave {
+.fit .deck-wave {
   height: 34px;
 }
 
-.compact .platter {
-  width: min(100%, 22vh, 210px);
+.fit .platter-wrap {
+  padding: 0;
 }
 
-.compact .channel {
-  /* one strip per deck, like a hardware mixer: Hi, Mid, Low, Filter, then the fader */
-  grid-template-columns: 1fr;
+.fit .pitch {
   gap: 4px;
 }
 
-.compact .knob {
-  gap: 1px;
-  font-size: 0.62rem;
-}
-
-.compact .channel .vrange {
-  grid-column: 1 / -1;
-  justify-self: center;
-  min-height: 70px;
-  height: 14vh;
-}
-
-.compact .vu {
+.fit .pitch .vrange {
   min-height: 0;
+  height: 150px;
 }
 
-.compact .knob-dial {
+.fit .transport .pad-btn {
+  padding: 0 4px;
+  height: 38px;
+  font-size: 0.8rem;
+}
+
+/* Mixer: two strips (Hi, Mid, Low, Filter, fader), meters between, crossfader below */
+.fit .mixer {
+  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 8px 6px;
+  justify-items: center;
+}
+
+.fit .mixer-title {
+  display: none;
+}
+
+.fit .channel {
+  grid-template-columns: auto;
+  justify-items: center;
+  justify-self: center;
+  align-content: start;
+  gap: 4px;
+}
+
+.fit .knob {
+  gap: 1px;
+  font-size: 0.6rem;
+}
+
+.fit .knob-dial {
   width: 32px;
   height: 32px;
 }
 
-.compact .vrange {
-  min-height: 80px;
+.fit .channel .vrange {
+  min-height: 0;
+  height: 96px;
 }
 
-.compact .pitch .vrange {
-  height: 16vh;
+.fit .vu {
+  grid-row: 1;
+  grid-column: 2;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
 }
 
-.compact .pads {
+.fit .xfader {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.fit .mixer-fx {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.fit .pads {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
-.compact .fx-pad {
+.fit .fx-pad {
   aspect-ratio: auto;
-  height: 52px;
+  height: 54px;
+  font-size: 0.9rem;
 }
 
-.compact .transport .pad-btn {
-  padding: 9px 4px;
-  font-size: 0.82rem;
+/* Wide design: 1180 x 440 */
+.fit[data-layout="land"] {
+  width: 1180px;
 }
 
-.compact .mixer-title {
+.fit[data-layout="land"] .console {
+  grid-template-columns: 460px 236px 460px;
+}
+
+.fit[data-layout="land"] .platter {
+  width: 200px;
+}
+
+/* Upright design: 400 x 652 */
+.fit[data-layout="port"] {
+  width: 400px;
+  gap: 10px;
+}
+
+.fit[data-layout="port"] .console {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 10px;
+}
+
+.fit[data-layout="port"] .mixer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 8px 12px;
+}
+
+.fit[data-layout="port"] .deck[data-deck="B"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.fit[data-layout="port"] .deck {
+  padding: 8px;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  gap: 6px;
+}
+
+.fit[data-layout="port"] .deck-title {
   display: none;
 }
 
+.fit[data-layout="port"] .deck-top {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.fit[data-layout="port"] .deck-time {
+  margin-left: 0;
+  width: 100%;
+  font-size: 0.72rem;
+}
+
+.fit[data-layout="port"] .deck-wave {
+  height: 24px;
+}
+
+.fit[data-layout="port"] .platter {
+  width: 128px;
+  border-width: 4px;
+}
+
+.fit[data-layout="port"] .pitch {
+  font-size: 0.55rem;
+}
+
+.fit[data-layout="port"] .pitch .vrange {
+  height: 104px;
+  width: 22px;
+}
+
+.fit[data-layout="port"] .transport {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.fit[data-layout="port"] .transport .pad-btn {
+  height: 30px;
+  font-size: 0.72rem;
+}
+
+.fit[data-layout="port"] .transport .play {
+  grid-column: span 2;
+}
+
+.fit[data-layout="port"] .knob-dial {
+  width: 26px;
+  height: 26px;
+}
+
+.fit[data-layout="port"] .knob-dial::after {
+  top: 2px;
+  height: 9px;
+}
+
+.fit[data-layout="port"] .channel .vrange {
+  height: 64px;
+}
+
+.fit[data-layout="port"] .pads {
+  gap: 6px;
+}
+
+.fit[data-layout="port"] .fx-pad {
+  height: 54px;
+  font-size: 0.66rem;
+  padding: 2px;
+}
+
+.fit[data-layout="port"] .fx-pad small {
+  display: none;
+}
+
+/* VJ panel (not scaled; it is small enough to fit as is) */
 .compact .vj-controls {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 12px;
+  width: min(900px, 100%);
 }
 
 .compact .vj-scenes {
@@ -106,55 +279,7 @@
   align-content: start;
 }
 
-@media (max-height: 520px) {
-  .compact .console {
-    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px) minmax(0, 1fr);
-  }
-
-  .compact .deck-wave {
-    height: 26px;
-  }
-
-  .compact .deck-top {
-    font-size: 0.8rem;
-  }
-
-  .compact .platter {
-    width: min(100%, 30vh);
-  }
-
-  .compact .fx-pad {
-    height: 40px;
-    font-size: 0.75rem;
-  }
-
-  .compact .fx-pad small {
-    display: none;
-  }
-
-  .compact .knob-dial {
-    width: 24px;
-    height: 24px;
-  }
-
-  .compact .knob-dial::after {
-    top: 2px;
-    height: 8px;
-  }
-
-  .compact .knob span {
-    font-size: 0.55rem;
-    line-height: 1;
-  }
-
-  .compact .channel {
-    gap: 2px;
-  }
-
-}
-
 @media (max-width: 700px) {
-  .compact .console,
   .compact .vj-controls {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -162,32 +287,10 @@
   .compact .vj-scenes {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .compact .pads {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-}
-
-.compact .vu {
-  min-height: 90px;
-  align-self: stretch;
-}
-
-.compact .deck-time {
-  white-space: nowrap;
 }
 
 @media (max-height: 520px) {
-  .compact .deck-title {
-    display: none;
-  }
-
-  .compact .platter {
-    width: min(100%, 24vh);
-  }
-
-  .compact .vu {
-    min-height: 60px;
+  .compact .vj-scenes .pad-btn {
+    padding: 9px 8px;
   }
 }

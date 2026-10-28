@@ -275,3 +275,15 @@
     font-size: 0.9rem;
   }
 }
+
+/* The DJ console is scaled to fit (see fitConsole), so its panel never scrolls */
+.panel[data-panel="dj"] {
+  width: auto;
+  max-width: calc(100% - 24px);
+  max-height: none;
+  overflow: hidden;
+}
+
+.panel[data-panel="vj"] {
+  width: min(900px, calc(100% - 24px));
+}
