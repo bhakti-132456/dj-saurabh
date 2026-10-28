@@ -819,8 +819,9 @@
 .gallery-strip {
   display: flex;
   align-items: center;
-  gap: clamp(40px, 7vw, 140px);
-  padding: 0 var(--gutter);
+  /* photos overlap; the strip starts and ends with a photo able to reach the centre */
+  gap: 0;
+  padding: 0 max(var(--gutter), 26vw);
   will-change: transform;
 }
 
@@ -831,9 +832,33 @@
   padding: 0;
   background: none;
   cursor: zoom-in;
-  transform-style: preserve-3d;
+  position: relative;
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+  transition: box-shadow 0.4s;
+}
+
+.g-item + .g-item {
+  margin-left: clamp(-240px, -14vw, -60px);
+}
+
+/* staggered heights, so the stack reads as layers rather than a row */
+.g-item:nth-child(3n + 2) {
+  translate: 0 -5vh;
+}
+
+.g-item:nth-child(3n) {
+  translate: 0 4vh;
+}
+
+.g-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: var(--dim, 0);
+  pointer-events: none;
 }
 
 .g-item.is-wide {
@@ -876,7 +901,7 @@
   .gallery-strip {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding-bottom: 8px;
+    padding: 5vh 12vw;
   }
 
   .g-item {

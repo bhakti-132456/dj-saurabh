@@ -275,15 +275,20 @@ function initGallery() {
         const distance = () => Math.max(0, strip.scrollWidth - window.innerWidth);
         const depth = () => {
             const cx = window.innerWidth / 2;
-            const k = window.innerWidth < 900 ? 0 : 1; // flat on phones, where you swipe the strip
+            const k = window.innerWidth < 900 ? 0.6 : 1; // gentler on phones
             items.forEach(el => {
                 const r = el.getBoundingClientRect();
-                const off = Math.max(-1, Math.min(1, (r.left + r.width / 2 - cx) / cx)); // -1..1 across the screen
-                // a gentle turn toward the centre: slightly smaller and dimmer toward the edges
-                el.style.transform = `perspective(1600px) rotateY(${off * -7 * k}deg) scale(${1 - Math.abs(off) * 0.1 * k})`;
-                el.style.opacity = 1 - Math.abs(off) * 0.35 * k;
+                const off = Math.max(-1.5, Math.min(1.5, (r.left + r.width / 2 - cx) / cx)); // 0 at the centre
+                const a = Math.abs(off);
+                // overlapping stack: the photo nearest the centre comes forward and sits on top,
+                // its neighbours turn away, shrink and dim behind it
+                el.style.zIndex = 100 - Math.round(a * 60);
+                el.style.transform = `perspective(1400px) rotateY(${off * -14 * k}deg) scale(${1 - Math.min(a, 1) * 0.22 * k})`;
+                el.style.setProperty('--dim', (Math.min(a, 1) * 0.6 * k).toFixed(3));
             });
         };
+        strip.addEventListener('scroll', depth, { passive: true }); // phones swipe the strip itself
+        requestAnimationFrame(depth);
         gsap.to(strip, {
             x: () => -distance(),
             ease: 'none',
@@ -298,7 +303,10 @@ function initGallery() {
                 onRefresh: depth,
             },
         });
-        return () => items.forEach(el => { el.style.transform = ''; el.style.opacity = ''; });
+        return () => {
+            strip.removeEventListener('scroll', depth);
+            items.forEach(el => { el.style.transform = ''; el.style.zIndex = ''; el.style.removeProperty('--dim'); });
+        };
     });
 
     const box = document.getElementById('lightbox');
