@@ -252,7 +252,17 @@ function initCrate() {
 function initLineup() {
     const ul = document.getElementById('lineupPoster');
     if (!ul) return;
-    ul.innerHTML = lineup.map((tier, t) => tier.map(n => `<li class="tier-${t + 1}">${n}</li>`).join('')).join('');
+    // A wall of names: big, mid and small names dealt out in a mixed order, each in one of
+    // four looks (wide, condensed red, outline, condensed), so it reads as a poster collage
+    const pools = lineup.map(tier => [...tier]);
+    const deal = [2, 0, 1, 2, 1, 2, 0, 1, 2];
+    const names = [];
+    for (let i = 0; pools.some(p => p.length); i++) {
+        let t = deal[i % deal.length];
+        if (!pools[t].length) t = pools.findIndex(p => p.length);
+        names.push([pools[t].shift(), t]);
+    }
+    ul.innerHTML = names.map(([n, t], i) => `<li class="tier-${t + 1} look-${i % 4}">${n}</li>`).join('');
     gsap.matchMedia().add(ANY_MOTION, () => {
         gsap.from(ul.children, {
             yPercent: 60, opacity: 0, duration: 0.9, ease: 'power4.out', stagger: { each: 0.035, from: 'center' },
