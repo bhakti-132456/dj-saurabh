@@ -700,6 +700,9 @@
 
 /* ---------- VISUALS ---------- */
 .visuals {
+  /* heading row and list share one grid, so the intro lines up with the descriptions */
+  --svc-cols: minmax(0, 0.8fr) minmax(0, 1fr);
+  --svc-gap: 32px;
   padding: clamp(80px, 10vw, 150px) var(--gutter);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -708,14 +711,15 @@
 
 .visuals-head {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: var(--svc-cols);
+  gap: var(--svc-gap);
   align-items: end;
 }
 
 .visuals-head p {
   color: #ddd5cb;
   max-width: 56ch;
+  margin: 0;
 }
 
 .vj {
@@ -761,8 +765,8 @@
 
 .services li {
   display: grid;
-  grid-template-columns: minmax(200px, 0.8fr) 1fr;
-  gap: 24px;
+  grid-template-columns: var(--svc-cols);
+  gap: var(--svc-gap);
   padding: 22px 0;
   border-top: 1px solid var(--line);
   align-items: baseline;
