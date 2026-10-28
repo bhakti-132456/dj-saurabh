@@ -650,81 +650,60 @@
   margin-bottom: clamp(28px, 4vw, 56px);
 }
 
+/* A flier: rows are sized in JS so each spans the full width, headliners on top */
 .lineup-poster {
   list-style: none;
   margin: 0 auto;
   padding: 0;
-  max-width: 1300px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  column-gap: 0.32em;
-  row-gap: 0;
+  max-width: 1100px;
   font-family: var(--font-display);
   font-weight: 800;
-  line-height: 0.92;
+  font-stretch: 125%;
   text-transform: uppercase;
-  font-size: clamp(1rem, 2vw, 1.6rem);
-}
-
-/* a name never splits across lines, and never pushes past the edge */
-.lineup-poster li {
-  white-space: nowrap;
-  max-width: 100%;
+  line-height: 1;
   letter-spacing: -0.02em;
-  transition: color 0.2s, -webkit-text-stroke-color 0.2s;
+  display: grid;
+  gap: 0.1em;
 }
 
-/* sizes: the headliners dominate, the rest fill the gaps between them */
-.lineup-poster .tier-1 {
-  font-size: clamp(2rem, 8vw, 6.4rem);
+.lineup-poster li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* a little air between the tiers */
+.lineup-poster .tier-2:not(.tier-2 + .tier-2),
+.lineup-poster .tier-3:not(.tier-3 + .tier-3) {
+  margin-top: clamp(6px, 1.4vw, 18px);
 }
 
 .lineup-poster .tier-2 {
-  font-size: clamp(1.25rem, 4.4vw, 3.4rem);
-}
-
-.lineup-poster .tier-3 {
-  font-size: clamp(0.95rem, 2.6vw, 2rem);
-}
-
-/* four looks, dealt in turn */
-.lineup-poster .look-0 {
-  font-stretch: 125%;
-}
-
-.lineup-poster .look-1 {
-  font-stretch: 70%;
-  font-weight: 900;
   color: var(--red);
 }
 
-.lineup-poster .look-2 {
-  font-stretch: 125%;
-  color: transparent;
-  -webkit-text-stroke: max(1px, 0.028em) var(--ink);
+.lineup-poster span {
+  white-space: nowrap;
+  text-wrap: nowrap; /* overrides the site-wide text-wrap: pretty, which would let names break */
+  transition: transform 0.35s var(--ease-out);
 }
 
-.lineup-poster .look-3 {
-  font-stretch: 78%;
-  font-weight: 700;
-}
-
-/* thin outlines get hard to read when small: fill those in */
-.lineup-poster .tier-3.look-2 {
-  color: var(--ink);
-  -webkit-text-stroke: 0;
-  font-stretch: 100%;
-}
-
-.lineup-poster li:hover {
+.lineup-poster .sep {
+  font-style: normal;
   color: var(--red);
-  -webkit-text-stroke-color: var(--red);
+  line-height: 1;
 }
 
-.lineup-poster .look-1:hover {
+.lineup-poster .tier-2 .sep {
   color: var(--ink);
+}
+
+/* hover: the name lifts a hair */
+@media (hover: hover) {
+  .lineup-poster span:hover {
+    transform: translateY(-0.05em);
+  }
 }
 
 /* ---------- VISUALS ---------- */

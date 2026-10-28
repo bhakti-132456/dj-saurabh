@@ -252,22 +252,81 @@ function initCrate() {
 function initLineup() {
     const ul = document.getElementById('lineupPoster');
     if (!ul) return;
-    // A wall of names: big, mid and small names dealt out in a mixed order, each in one of
-    // four looks (wide, condensed red, outline, condensed), so it reads as a poster collage
-    const pools = lineup.map(tier => [...tier]);
-    const deal = [2, 0, 1, 2, 1, 2, 0, 1, 2];
-    const names = [];
-    for (let i = 0; pools.some(p => p.length); i++) {
-        let t = deal[i % deal.length];
-        if (!pools[t].length) t = pools.findIndex(p => p.length);
-        names.push([pools[t].shift(), t]);
-    }
-    ul.innerHTML = names.map(([n, t], i) => `<li class="tier-${t + 1} look-${i % 4}">${n}</li>`).join('');
+    // An event flier: headliners on top, then each tier below, every row justified to the
+    // full width (so the type steps down as rows get longer), names split by small dots
+    let rows = [];
+    const build = () => {
+        const narrow = innerWidth < 600;
+        const limits = narrow ? [16, 26, 36] : [20, 36, 50]; // characters per row, by tier
+        const groups = [];
+        lineup.forEach((tier, t) => {
+            // spread the tier over just enough rows, longest names first into the emptiest
+            // row, so a tier's rows come out about the same length (and so the same size)
+            const len = n => n.length + 2;
+            const total = tier.reduce((sum, n) => sum + len(n), 0);
+            const count = Math.min(tier.length, Math.ceil(total / limits[t]));
+            const bins = Array.from({ length: count }, () => ({ names: [], chars: 0 }));
+            [...tier].sort((a, b) => b.length - a.length).forEach(n => {
+                const bin = bins.reduce((m, x) => (x.chars < m.chars ? x : m));
+                bin.names.push(n);
+                bin.chars += len(n);
+            });
+            // keep the original billing order inside each row; shortest (biggest) row first
+            bins.forEach(b => b.names.sort((x, y) => tier.indexOf(x) - tier.indexOf(y)));
+            bins.sort((x, y) => x.chars - y.chars).forEach(b => groups.push([t, b.names]));
+        });
+        ul.innerHTML = groups.map(([t, g]) => `<li class="tier-${t + 1}">${g.map(n => `<span data-w="1">${n}</span>`)
+            .join('<i class="sep" data-w="0.6" aria-hidden="true">•</i>')}</li>`).join('');
+        rows = [...ul.children];
+        fit();
+    };
+    const fit = () => {
+        const cs = getComputedStyle(ul);
+        const w = ul.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        rows.forEach(r => {
+            const spans = [...r.children]; // names and the dots between them
+            const ws = spans.map(sp => Number(sp.dataset.w));
+            // width of each name at 100px, then solve for the row scale that fills the line
+            spans.forEach(sp => { sp.style.fontSize = '100px'; });
+            const nat = spans.map(sp => sp.getBoundingClientRect().width);
+            const gap = 0.16 * 100; // space either side of a dot
+            const unit = nat.reduce((sum, n, i) => sum + n * ws[i], 0) + gap * (spans.length - 1);
+            let scale = Math.min((w - 2) / unit, (w * 0.3) / (100 * Math.max(...ws)));
+            const set = () => spans.forEach((sp, i) => { sp.style.fontSize = `${(100 * ws[i] * scale).toFixed(2)}px`; });
+            set();
+            // type doesn't scale perfectly linearly: correct the last few pixels with a second pass
+            const used = spans.reduce((sum, sp) => sum + sp.getBoundingClientRect().width, 0) + gap * scale * (spans.length - 1);
+            if (used > 0 && scale < (w * 0.3) / (100 * Math.max(...ws))) { scale *= (w - 0.5) / used; set(); }
+        });
+    };
+    build();
+    document.fonts?.ready.then(fit);
+    let lastW = innerWidth;
+    addEventListener('resize', () => {
+        if (innerWidth === lastW) return;
+        const regroup = (innerWidth < 600) !== (lastW < 600);
+        lastW = innerWidth;
+        regroup ? build() : fit();
+    });
+
     gsap.matchMedia().add(ANY_MOTION, () => {
-        gsap.from(ul.children, {
-            yPercent: 60, opacity: 0, duration: 0.9, ease: 'power4.out', stagger: { each: 0.035, from: 'center' },
+        gsap.from(rows, {
+            yPercent: 40, opacity: 0, duration: 0.9, ease: 'power4.out', stagger: 0.05,
             scrollTrigger: { trigger: ul, start: 'top 80%' },
         });
+        // A slow ripple runs through the names as the page scrolls; vertical only, so the
+        // block's edges stay straight
+        const wave = ScrollTrigger.create({
+            trigger: ul, start: 'top bottom', end: 'bottom top',
+            onUpdate: self => {
+                let k = 0;
+                rows.forEach((r, i) => [...r.children].forEach(el => {
+                    const ph = self.progress * Math.PI * 5 - i * 0.6 - k++ * 0.35;
+                    el.style.translate = `0 ${(Math.sin(ph) * 0.045).toFixed(3)}em`;
+                }));
+            },
+        });
+        return () => { wave.kill(); rows.forEach(r => [...r.children].forEach(el => { el.style.translate = ''; })); };
     });
 }
 
